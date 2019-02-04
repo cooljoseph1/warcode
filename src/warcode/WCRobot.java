@@ -10,6 +10,16 @@ public class WCRobot {
 	public int wood;
 	public int time;
 	
+	private Engine engine;
+	
+	public WCRobot(Unit me) {
+		this(me, 200);
+	}
+	public WCRobot(Unit me, int time) {
+		this.me = me;
+		this.time = time;
+	}
+	
 	public final void move(int x, int y) {
 		
 	}
@@ -40,12 +50,12 @@ public class WCRobot {
 		
 	}
 	public final Unit getUnit(int id) {
-		
+		return engine.getUnit(id);
 	}
 	public final boolean isVisible(Unit unit) {
-		
+		return engine.isVisible(this.me, unit);
 	}
 	public final Signal getSignal(Unit unit) {
-		
+		return engine.getSignal(unit);
 	}
 }
