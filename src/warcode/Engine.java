@@ -10,8 +10,10 @@ public class Engine {
 	public final Constructor<WCRobot> redConstructor;
 	public final Constructor<WCRobot> blueConstructor;
 	
-	
+	private boolean redWon = false;
+	private boolean blueWon = false;
 	private Map map;
+	
 	
 	private LinkedList<WCRobot> wcrobots = new LinkedList<WCRobot>();
 	Set<Integer> ids = new HashSet<Integer>();
@@ -32,13 +34,13 @@ public class Engine {
 	}
 	
 	public int[][] getPassableMap() {
-		return map.passableMap.toArray();
+		return map.getPassableMapCopy();
 	}
 	public int[][] getGoldMap() {
-		return map.goldMap.toArray();
+		return map.getGoldMapCopy();
 	}
 	public int[][] getWoodMap() {
-		return map.woodMap.toArray();
+		return map.getWoodMapCopy();
 	}
 	
 	private void addRobot(Unit unit, Team team) {
@@ -55,6 +57,30 @@ public class Engine {
 				System.out.println("Blue robot failedto initialize");
 			}
 		}
+	}
+	
+	public boolean isOpen(int x, int y) {
+		if(!map.isOpen(x, y)) {
+			return false;
+		}
+		for(WCRobot robot : wcrobots) {
+			if(x == robot.me.getX() && y == robot.me.getY()) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public boolean isOnMine(int x, int y) {
+		return (map.get(x,y) == 2); //2 means it is on a mine.
+	}
+	public void decreaseGold(int x, int y, int amount) {
+		map.decreaseGold(x, y, amount);
+	}
+	public boolean isOnTree(int x, int y) {
+		return (map.get(x, y) == 3); //3 means it is a tree location.
+	}
+	public void decreaseWood(int x, int y, int amount) {
+		map.decreaseWood(x, y, amount);
 	}
 	
 	public void playGame(int seed) {
@@ -77,6 +103,10 @@ public class Engine {
 			}
 		}
 		
-		
+		while(!redWon && !blueWon) {
+			for(WCRobot robot: wcrobots) {
+				robot._do_turn();
+			}
+		}
 	}
 }
