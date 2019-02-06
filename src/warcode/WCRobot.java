@@ -5,6 +5,8 @@ public class WCRobot {
 	public int[][] map;
 	public int[][] goldMap;
 	public int[][] woodMap;
+	public Unit[] visibleUnits;
+	public int[][] visibleUnitMap;
 	public Signal[] signals;
 	public int gold;
 	public int wood;
@@ -31,6 +33,10 @@ public class WCRobot {
 		map = engine.getPassableMap();
 		goldMap = engine.getGoldMap();
 		woodMap = engine.getWoodMap();
+		
+		setUpVisibleRobotMap();
+		setUpVisibleRobots();
+		
 		turn();
 	}
 
@@ -106,11 +112,11 @@ public class WCRobot {
 	}
 
 	public final Unit[] getVisibleUnits() {
-		
+		return visibleUnits;
 	}
 
 	public final int[][] getVisibleUnitMap() {
-
+		return visibleUnitMap;
 	}
 
 	public final Unit getUnit(int id) {
