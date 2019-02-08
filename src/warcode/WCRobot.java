@@ -50,7 +50,7 @@ public class WCRobot {
 			throw new MoveException("Castles cannot move.");
 		} else if (moved) {
 			throw new MoveException("Robot can only move once per turn.");
-		} else if (Math.pow(me.getX() - x, 2) + Math.pow(me.getY() - y, 2) > me.unitType.MOVEMENT_SPEED) {//distance squared is too far
+		} else if (Engine.distanceSquared(me.getX(), me.getY(), x, y) > me.unitType.MOVEMENT_SPEED) {//distance squared is too far
 			throw new MoveException(String.format("%d, %d is too far to move to.", x, y));
 		} else if (engine.isOpen(x, y)) {
 			this.me.setX(x);
@@ -91,20 +91,31 @@ public class WCRobot {
 	}
 
 	public final void give(int x, int y, int gold, int wood) {
-
+		//TODO:  Make this function
+		
 	}
 
 	public final void attack(int x, int y) throws AttackException {
 		if(attacked) {
 			throw new AttackException("Robot can only attack once per turn.");
 		} else {
-			engine.attack(x, y);
+			engine.attack(x, y, me.unitType);
 			attacked = true;
 		}
 	}
 
+	
 	public final void buildUnit(int x, int y, UnitType unitType) {
-
+		//TODO:  Make this function
+		
+	}
+	
+	public final void setUpVisibleRobotMap() {
+		//TODO:  Make this function
+	}
+	
+	public final void setUpVisibleRobots() {
+		//TODO:  Make this function
 	}
 
 	public final void signal(int message) {
@@ -124,10 +135,13 @@ public class WCRobot {
 	}
 
 	public final boolean isVisible(Unit unit) {
-		return engine.isVisible(this.me, unit);
+		int distSquared = Engine.distanceSquared(me, unit);
+		return (distSquared<=this.me.unitType.VISION_RADIUS);
 	}
+	
+	
 
 	public final Signal getSignal(Unit unit) {
-		return engine.getSignal(unit);
+		return unit.getSignal();
 	}
 }

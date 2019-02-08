@@ -58,6 +58,15 @@ public class Unit {
 			this.gold = SPECS.MAX_RESOURCES - this.wood;
 		}
 	}
+	protected void setHealth(int health) {
+		this.health = health;
+	}
+	protected void hurtUnit(int amount) {
+		health -= amount;
+		if (health<0) {
+			health = 0;
+		}
+	}
 	public int getGold() {
 		return gold;
 	}
@@ -69,5 +78,8 @@ public class Unit {
 	}
 	public Signal getSignal() {
 		return signal;
+	}
+	public int getHealth() {
+		return health;
 	}
 }
