@@ -12,6 +12,7 @@ public class Engine {
 	public final Constructor<WCRobot> blueConstructor;
 
 	private Map map;
+	private int[][] visibleUnitMap = new int[0][0];
 
 	private LinkedList<Integer> idQueue = new LinkedList<Integer>();
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
@@ -41,6 +42,38 @@ public class Engine {
 
 	public int[][] getWoodMap() {
 		return map.getWoodMapCopy();
+	}
+
+	public int[][] getVisibleUnitMap(Unit unit) {
+		int[][] visibleUnitMap = new int[map.height][map.width];
+		
+		for (int id : idQueue) {
+			Unit tempUnit = getUnit(id);
+			visibleUnitMap[tempUnit.getY()][tempUnit.getX()] = tempUnit.id;
+		}
+		
+		for (int y = 0; y < map.height; y++) {
+			for (int x = 0; x < map.width; x++) {
+				// set values outside vision radius to -1
+				if (distanceSquared(x, y, unit.getX(), unit.getY()) > unit.unitType.VISION_RADIUS) {
+					visibleUnitMap[y][x] = -1;
+				}
+			}
+		}
+		
+		return visibleUnitMap;
+	}
+	
+	public Unit[] getVisibleUnits(Unit unit) {
+		LinkedList<Unit> units = new LinkedList<Unit>();
+		for(int id : idQueue) {
+			Unit tempUnit = getUnit(id);
+			if(distanceSquared(tempUnit.getX(), tempUnit.getY(), unit.getX(), unit.getY()) <= unit.unitType.VISION_RADIUS) {
+				units.add(tempUnit);
+			}
+		}
+		
+		return (Unit[]) units.toArray();
 	}
 
 	public boolean isOpen(int x, int y) {

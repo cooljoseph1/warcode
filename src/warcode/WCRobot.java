@@ -34,8 +34,8 @@ public class WCRobot {
 		goldMap = engine.getGoldMap();
 		woodMap = engine.getWoodMap();
 		
-		setUpVisibleRobotMap();
-		setUpVisibleRobots();
+		visibleUnits = engine.getVisibleUnits(me);
+		visibleUnitMap = engine.getVisibleUnitMap(me);
 		
 		turn();
 	}
@@ -110,13 +110,6 @@ public class WCRobot {
 		
 	}
 	
-	public final void setUpVisibleRobotMap() {
-		//TODO:  Make this function
-	}
-	
-	public final void setUpVisibleRobots() {
-		//TODO:  Make this function
-	}
 
 	public final void signal(int message) {
 		this.me.setSignal(message);

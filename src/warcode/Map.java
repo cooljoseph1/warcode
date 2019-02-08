@@ -7,8 +7,12 @@ public class Map {
 	private int[][] goldMap;
 	private int[][] woodMap;
 	private int[][] initalCastleLocations;
+	public final int width;
+	public final int height;
 
 	public Map(int seed) {
+		width = 100;
+		height = 100;
 		// TODO: make map from a file.
 
 	}
@@ -68,6 +72,7 @@ public class Map {
 	}
 
 	public int[][] getAlternatingCastleLocations() {
+		//TODO:  Make this function.
 		return new int[0][0];
 	}
 }
