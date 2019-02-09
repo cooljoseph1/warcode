@@ -58,6 +58,16 @@ public class Unit {
 			this.gold = SPECS.MAX_RESOURCES - this.wood;
 		}
 	}
+	protected void decreaseWood(int wood) {
+		this.wood -= wood;
+		if(this.wood < 0) {
+			throw new Error("Uh oh, how is your wood below zero?");
+		}
+	}
+	protected void decreaseGold(int gold) {
+		this.gold -= gold;
+		throw new Error("Uh oh, how is your gold below zero?");
+	}
 	protected void setHealth(int health) {
 		this.health = health;
 	}

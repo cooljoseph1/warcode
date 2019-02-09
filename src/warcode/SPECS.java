@@ -10,6 +10,9 @@ public final class SPECS {
 	public static final int MAX_RESOURCES = 100;
 	public static final int MINE_AMOUNT = 10;
 	public static final int WOOD_AMOUNT = 10;
+	
+	public static final int MAX_MAP_SIZE = 100;
+	public static final int MIN_MAP_SIZE = 30;
 }
 
 final class UnitType {

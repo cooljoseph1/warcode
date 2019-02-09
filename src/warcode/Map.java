@@ -1,12 +1,13 @@
 package warcode;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class Map {
 	private int[][] passableMap;
 	private int[][] goldMap;
 	private int[][] woodMap;
-	private int[][] initalCastleLocations;
+	private LinkedList<InitialCastle> initialCastleLocations;
 	public final int width;
 	public final int height;
 
@@ -71,8 +72,8 @@ public class Map {
 		return passableMap[y][x];
 	}
 
-	public int[][] getAlternatingCastleLocations() {
-		//TODO:  Make this function.
-		return new int[0][0];
+	public LinkedList<InitialCastle> getCastleLocations() {
+		return (LinkedList<InitialCastle>) initialCastleLocations.clone();
+		
 	}
 }
