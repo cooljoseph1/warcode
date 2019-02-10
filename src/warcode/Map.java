@@ -18,7 +18,15 @@ public class Map {
 
 	}
 
-	protected int[][] getPassableMapCopy() {
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public int[][] getPassableMapCopy() {
 		int[][] copy = new int[passableMap.length][passableMap[0].length];
 		for (int i = 0; i < passableMap.length; i++) {
 			copy[i] = Arrays.copyOf(passableMap[i], passableMap[i].length);
@@ -26,7 +34,7 @@ public class Map {
 		return copy;
 	}
 
-	protected int[][] getGoldMapCopy() {
+	public int[][] getGoldMapCopy() {
 		int[][] copy = new int[goldMap.length][goldMap[0].length];
 		for (int i = 0; i < goldMap.length; i++) {
 			copy[i] = Arrays.copyOf(goldMap[i], goldMap[i].length);
@@ -34,7 +42,7 @@ public class Map {
 		return copy;
 	}
 
-	protected int[][] getWoodMapCopy() {
+	public int[][] getWoodMapCopy() {
 		int[][] copy = new int[woodMap.length][woodMap[0].length];
 		for (int i = 0; i < woodMap.length; i++) {
 			copy[i] = Arrays.copyOf(woodMap[i], woodMap[i].length);
@@ -42,11 +50,11 @@ public class Map {
 		return copy;
 	}
 
-	protected boolean isOpen(int x, int y) {
+	public boolean isOpen(int x, int y) {
 		return (passableMap[y][x] == 1); // 1 means it is passable.
 	}
 
-	protected boolean isOpenPeasant(int x, int y) {
+	public boolean isOpenPeasant(int x, int y) {
 		return (passableMap[y][x] == 1 || passableMap[y][x] == 2); // 2 means it is a gold mine, 1 means it is passable.
 	}
 
@@ -56,24 +64,26 @@ public class Map {
 			goldMap[y][x] = 0;
 		}
 		if (goldMap[y][x] == 0) {
-			passableMap[y][x] = 0; //turn the mine into an impassable square.
+			passableMap[y][x] = 0; // turn the mine into an impassable square.
 		}
 	}
+
 	protected void decreaseWood(int x, int y, int amount) {
 		woodMap[y][x] -= amount;
 		if (woodMap[y][x] <= 0) {
 			woodMap[y][x] = 0;
 		}
 		if (woodMap[y][x] == 0) {
-			passableMap[y][x] = 1; //turn the tree into a passable square.
+			passableMap[y][x] = 1; // turn the tree into a passable square.
 		}
 	}
-	protected int get(int x, int y) {
+
+	public int get(int x, int y) {
 		return passableMap[y][x];
 	}
 
 	protected LinkedList<InitialCastle> getCastleLocations() {
 		return (LinkedList<InitialCastle>) initialCastleLocations.clone();
-		
+
 	}
 }
