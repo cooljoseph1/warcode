@@ -6,14 +6,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.ListIterator;
 
 public class Engine {
 	public final Constructor<WCRobot> redConstructor;
 	public final Constructor<WCRobot> blueConstructor;
 
 	private Map map;
-	private int[][] visibleUnitMap = new int[0][0];
 
 	private LinkedList<Integer> idQueue = new LinkedList<Integer>();
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
@@ -34,19 +32,19 @@ public class Engine {
 		}
 	}
 
-	public int[][] getPassableMap() {
+	protected int[][] getPassableMap() {
 		return map.getPassableMapCopy();
 	}
 
-	public int[][] getGoldMap() {
+	protected int[][] getGoldMap() {
 		return map.getGoldMapCopy();
 	}
 
-	public int[][] getWoodMap() {
+	protected int[][] getWoodMap() {
 		return map.getWoodMapCopy();
 	}
 
-	public int[][] getVisibleUnitMap(Unit unit) {
+	protected int[][] getVisibleUnitMap(Unit unit) {
 		int[][] visibleUnitMap = new int[map.height][map.width];
 
 		for (int id : idQueue) {
@@ -66,7 +64,7 @@ public class Engine {
 		return visibleUnitMap;
 	}
 
-	public Unit[] getVisibleUnits(Unit unit) {
+	protected Unit[] getVisibleUnits(Unit unit) {
 		LinkedList<Unit> units = new LinkedList<Unit>();
 		for (int id : idQueue) {
 			Unit tempUnit = getUnit(id);
@@ -79,7 +77,7 @@ public class Engine {
 		return (Unit[]) units.toArray();
 	}
 
-	public boolean isOpen(int x, int y) {
+	protected boolean isOpen(int x, int y) {
 		if (!map.isOpen(x, y)) {
 			return false;
 		}
@@ -91,15 +89,15 @@ public class Engine {
 		return true;
 	}
 
-	public boolean isOnMine(int x, int y) {
+	protected boolean isOnMine(int x, int y) {
 		return (map.get(x, y) == 2); // 2 means it is on a mine.
 	}
 
-	public boolean isOnTree(int x, int y) {
+	protected boolean isOnTree(int x, int y) {
 		return (map.get(x, y) == 3); // 3 means it is a tree location.
 	}
 
-	public boolean isOnCastle(int x, int y) {
+	protected boolean isOnCastle(int x, int y) {
 		for (Unit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
 				return true;
@@ -114,7 +112,7 @@ public class Engine {
 	 * @param gold
 	 * @param wood
 	 */
-	public void addResources(int x, int y, int gold, int wood) {
+	protected void addResources(int x, int y, int gold, int wood) {
 		Unit castleAtLocation = null;
 		for(Unit castle : castles) {
 			if(castle.getX() == x && castle.getY() == y) {
@@ -125,15 +123,15 @@ public class Engine {
 		castleAtLocation.addGold(gold);
 		castleAtLocation.addWood(wood);
 	}
-	public void decreaseGold(int x, int y, int amount) {
+	protected void decreaseGold(int x, int y, int amount) {
 		map.decreaseGold(x, y, amount);
 	}
 
-	public void decreaseWood(int x, int y, int amount) {
+	protected void decreaseWood(int x, int y, int amount) {
 		map.decreaseWood(x, y, amount);
 	}
 
-	public void attack(int x, int y, UnitType unitType) {
+	protected void attack(int x, int y, UnitType unitType) {
 		LinkedList<Integer> idsToRemove = new LinkedList<Integer>();
 		for (int id : idQueue) {
 			WCRobot robot = getRobot(id);
@@ -146,8 +144,17 @@ public class Engine {
 		}
 		removeAllRobots(idsToRemove);
 	}
+	
+	protected void makeRobot(int x, int y, Team team, UnitType unitType) {
+		int id;
+		do {
+			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
+		} while (idRobotMap.containsKey(id));
+		Unit castle = new Unit(id, unitType, team, x, y);
+		addRobot(castle, team);
+	}
 
-	public Unit getUnit(int id) {
+	protected Unit getUnit(int id) {
 		return idRobotMap.get(id).me;
 	}
 
@@ -205,12 +212,8 @@ public class Engine {
 
 		// Add initial castle locations
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
-			int id;
-			do {
-				id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
-			} while (idRobotMap.containsKey(id));
-			Unit castle = new Unit(id, SPECS.Castle, castleInfo.getTeam(), castleInfo.getX(), castleInfo.getY());
-			addRobot(castle, castleInfo.getTeam());
+			
+			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle);
 		}
 
 		// Run game until one wins or turn reaches 1000.
@@ -245,13 +248,13 @@ public class Engine {
 		}
 	}
 
-	public final static int distanceSquared(Unit unit1, Unit unit2) {
+	protected final static int distanceSquared(Unit unit1, Unit unit2) {
 		int dx = unit1.getX() - unit2.getX();
 		int dy = unit1.getY() - unit2.getY();
 		return dx * dx + dy * dy;
 	}
 
-	public final static int distanceSquared(int x1, int y1, int x2, int y2) {
+	protected final static int distanceSquared(int x1, int y1, int x2, int y2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return dx * dx + dy * dy;

@@ -4,6 +4,7 @@ public class InitialCastle {
 	private final int x;
 	private final int y;
 	private final Team team;
+	
 	/**
 	 * Container for a starting castle location
 	 * @param team
