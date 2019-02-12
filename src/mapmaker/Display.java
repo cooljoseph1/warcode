@@ -12,6 +12,9 @@ import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import warcode.Tile;
 
 public class Display extends JPanel implements MouseMotionListener, MouseListener {
 
@@ -28,17 +31,26 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	private int left;
 
 	private int[] previousTileChanged = new int[] { -1, -1 };
-	private int[][] gridMap;
+	private Tile[][] tileMap;
+	private Tile currentTileType = Tile.IMPASSABLE;
 
 	public Display(int width, int height, int mapWidth, int mapHeight) {
 		super();
 
 		this.mapWidth = mapWidth;
 		this.mapHeight = mapHeight;
-		gridMap = new int[mapHeight][mapWidth];
-		window = new Window();
+
+		tileMap = new Tile[mapHeight][mapWidth];
+		// initialize tileMap to empty tiles
+		for (int y = 0; y < tileMap.length; y++) {
+			for (int x = 0; x < tileMap[0].length; x++) {
+				tileMap[y][x] = Tile.PASSABLE;
+			}
+		}
+
+		window = new Window(this);
 		// setPreferredSize(new Dimension(width, height));
-		
+
 		window.setPreferredSize(new Dimension(width, height));
 		window.setLayout(new BorderLayout());
 		window.add(this, BorderLayout.CENTER);
@@ -47,8 +59,8 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		window.setVisible(true);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-
 		addMouseMotionListener(this);
+		addMouseListener(this);
 
 	}
 
@@ -63,19 +75,19 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 
-		for (int y = 0; y < gridMap.length; y++) {
-			for (int x = 0; x < gridMap[0].length; x++) {
-				switch (gridMap[y][x]) {
-				case 0:
+		for (int y = 0; y < tileMap.length; y++) {
+			for (int x = 0; x < tileMap[0].length; x++) {
+				switch (tileMap[y][x]) {
+				case PASSABLE:
 					g2d.setColor(Color.WHITE);
 					break;
-				case 1:
-					g2d.setColor(Color.RED);
+				case IMPASSABLE:
+					g2d.setColor(Color.BLACK);
 					break;
-				case 2:
+				case GOLD:
 					g2d.setColor(Color.YELLOW);
 					break;
-				case 3:
+				case WOOD:
 					g2d.setColor(Color.GREEN);
 					break;
 				default:
@@ -115,25 +127,41 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	private int[] calculateGridPosition(int x, int y) {
 		return new int[] { (int) Math.floor((x - left) / scaleSize), (int) Math.floor((y - top) / scaleSize) };
 	}
-	
-	private void setTile(int mouseX, int mouseY, int tileType) {
-		
-	}
 
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		int[] gridPosition = calculateGridPosition(e.getX(), e.getY());
+	private void setTile(int mouseX, int mouseY, Tile tileType) {
+		int[] gridPosition = calculateGridPosition(mouseX, mouseY);
 		if (Arrays.equals(gridPosition, previousTileChanged)) {
 			return;
 		}
 		if (gridPosition[0] < 0 || gridPosition[0] >= mapWidth || gridPosition[1] < 0 || gridPosition[1] >= mapHeight) {
 			return;
 		}
-		gridMap[gridPosition[1]][gridPosition[0]] += 1;
-		gridMap[gridPosition[1]][gridPosition[0]] %= 4;
+
+		tileMap[gridPosition[1]][gridPosition[0]] = tileType;
 		previousTileChanged = gridPosition;
 		repaint();
 
+	}
+	
+	public String mapToString() {
+		StringBuilder stringBuilder = new StringBuilder();
+		
+		
+		for(Tile[] row : tileMap) {
+			for(Tile tile : row) {
+				stringBuilder.append(tile);
+			}
+			stringBuilder.append("\n");
+		}
+		return stringBuilder.substring(0, stringBuilder.length() - 1); //get rid of the last newline
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		if(!SwingUtilities.isLeftMouseButton(e)) {
+			return;
+		}
+		setTile(e.getX(), e.getY(), currentTileType);
 	}
 
 	@Override
@@ -144,31 +172,41 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
+		switch (e.getButton()) {
+		case MouseEvent.BUTTON1:
+			setTile(e.getX(), e.getY(), currentTileType);
+			break;
+		case MouseEvent.BUTTON2:
+			break;
+		case MouseEvent.BUTTON3:
+			currentTileType = Tile.next(currentTileType);
+			break;
+		default:
+			break;
+		}
+
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

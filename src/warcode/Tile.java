@@ -17,4 +17,19 @@ public enum Tile {
 			return INVALID;
 		}
 	}
+	@Override
+	public String toString() {
+		switch(this) {
+		case PASSABLE:
+			return "P";
+		case IMPASSABLE:
+			return "I";
+		case GOLD:
+			return "G";
+		case WOOD:
+			return "W";
+		default:
+			return "X";
+		}
+	}
 }

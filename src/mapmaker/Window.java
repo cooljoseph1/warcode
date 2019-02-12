@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileWriter;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -13,13 +14,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Window extends JFrame {
 
 	private static final long serialVersionUID = -585839154376527986L;
-	File saveLocation;
+	String saveLocation;
+	Display display;
 
-	public Window() {
+	public Window(Display display) {
 		super();
 
 		try {
@@ -28,6 +31,8 @@ public class Window extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		this.display = display;
 
 		ImageIcon img = new ImageIcon("Resources/WarcodeIcon.png");
 		setIconImage(img.getImage());
@@ -42,14 +47,29 @@ public class Window extends JFrame {
 		menu.add(save);
 		save.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser();
-				int returnVal = chooser.showOpenDialog(null);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file = chooser.getSelectedFile();
-					saveLocation = file;
-					
-				}
+				if (saveLocation == null) {
+					JFileChooser chooser = new JFileChooser();
+					FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
+					chooser.setFileFilter(filter);
+					int returnVal = chooser.showOpenDialog(null);
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						String file = chooser.getSelectedFile().getAbsolutePath();
+						if (!file.endsWith(".wcm")) {
+							file = file + ".wcm";
+						}
+						saveLocation = file;
 
+					} else {
+						return;
+					}
+				}
+				try {
+					FileWriter writer = new FileWriter(saveLocation);
+					writer.write(display.mapToString());
+					writer.close();
+				} catch (Exception ex) {
+					throw new RuntimeException(ex);
+				}
 			}
 
 		});
