@@ -6,16 +6,14 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-public class Display extends JPanel implements MouseMotionListener {
+public class Display extends JPanel implements MouseMotionListener, MouseListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
 
@@ -117,6 +115,10 @@ public class Display extends JPanel implements MouseMotionListener {
 	private int[] calculateGridPosition(int x, int y) {
 		return new int[] { (int) Math.floor((x - left) / scaleSize), (int) Math.floor((y - top) / scaleSize) };
 	}
+	
+	private void setTile(int mouseX, int mouseY, int tileType) {
+		
+	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
@@ -138,5 +140,35 @@ public class Display extends JPanel implements MouseMotionListener {
 	public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 }

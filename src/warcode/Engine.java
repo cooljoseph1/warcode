@@ -32,7 +32,7 @@ public class Engine {
 		}
 	}
 
-	protected int[][] getPassableMap() {
+	protected Tile[][] getPassableMap() {
 		return map.getPassableMapCopy();
 	}
 
@@ -90,11 +90,11 @@ public class Engine {
 	}
 
 	protected boolean isOnMine(int x, int y) {
-		return (map.get(x, y) == 2); // 2 means it is on a mine.
+		return (map.get(x, y) == Tile.GOLD);
 	}
 
 	protected boolean isOnTree(int x, int y) {
-		return (map.get(x, y) == 3); // 3 means it is a tree location.
+		return (map.get(x, y) == Tile.WOOD);
 	}
 
 	protected boolean isOnCastle(int x, int y) {

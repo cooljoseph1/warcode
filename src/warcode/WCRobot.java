@@ -2,7 +2,7 @@ package warcode;
 
 public class WCRobot {
 	public Unit me;
-	public int[][] map;
+	public Tile[][] map;
 	public int[][] goldMap;
 	public int[][] woodMap;
 	public Unit[] visibleUnits;

@@ -47,7 +47,6 @@ public class Window extends JFrame {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = chooser.getSelectedFile();
 					saveLocation = file;
-					FileUtils.writeStringToFile(saveLocation, getSaveMap());
 					
 				}
 

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 
 public class Map {
-	private int[][] passableMap;
+	private Tile[][] passableMap;
 	private int[][] goldMap;
 	private int[][] woodMap;
 	private LinkedList<InitialCastle> initialCastleLocations;
@@ -26,8 +26,8 @@ public class Map {
 		return height;
 	}
 
-	public int[][] getPassableMapCopy() {
-		int[][] copy = new int[passableMap.length][passableMap[0].length];
+	public Tile[][] getPassableMapCopy() {
+		Tile[][] copy = new Tile[passableMap.length][passableMap[0].length];
 		for (int i = 0; i < passableMap.length; i++) {
 			copy[i] = Arrays.copyOf(passableMap[i], passableMap[i].length);
 		}
@@ -51,11 +51,11 @@ public class Map {
 	}
 
 	public boolean isOpen(int x, int y) {
-		return (passableMap[y][x] == 1); // 1 means it is passable.
+		return (passableMap[y][x] == Tile.PASSABLE);
 	}
 
 	public boolean isOpenPeasant(int x, int y) {
-		return (passableMap[y][x] == 1 || passableMap[y][x] == 2); // 2 means it is a gold mine, 1 means it is passable.
+		return (passableMap[y][x] == Tile.PASSABLE || passableMap[y][x] == Tile.GOLD);
 	}
 
 	protected void decreaseGold(int x, int y, int amount) {
@@ -64,7 +64,7 @@ public class Map {
 			goldMap[y][x] = 0;
 		}
 		if (goldMap[y][x] == 0) {
-			passableMap[y][x] = 0; // turn the mine into an impassable square.
+			passableMap[y][x] = Tile.IMPASSABLE; // turn the mine into an impassable square.
 		}
 	}
 
@@ -74,11 +74,11 @@ public class Map {
 			woodMap[y][x] = 0;
 		}
 		if (woodMap[y][x] == 0) {
-			passableMap[y][x] = 1; // turn the tree into a passable square.
+			passableMap[y][x] = Tile.PASSABLE; // turn the tree into a passable square.
 		}
 	}
 
-	public int get(int x, int y) {
+	public Tile get(int x, int y) {
 		return passableMap[y][x];
 	}
 
