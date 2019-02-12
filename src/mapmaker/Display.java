@@ -5,11 +5,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.ComponentAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.util.Arrays;
 
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-public class Display extends JPanel {
+public class Display extends JPanel implements MouseMotionListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
 
@@ -23,20 +29,29 @@ public class Display extends JPanel {
 	private int top;
 	private int left;
 
+	private int[] previousTileChanged = new int[] { -1, -1 };
+	private int[][] gridMap;
+
 	public Display(int width, int height, int mapWidth, int mapHeight) {
 		super();
+
+		this.mapWidth = mapWidth;
+		this.mapHeight = mapHeight;
+		gridMap = new int[mapHeight][mapWidth];
 		window = new Window();
-		//setPreferredSize(new Dimension(width, height));
+		// setPreferredSize(new Dimension(width, height));
+		
 		window.setPreferredSize(new Dimension(width, height));
 		window.setLayout(new BorderLayout());
 		window.add(this, BorderLayout.CENTER);
 		window.pack();
-		
+
 		window.setVisible(true);
-		this.mapWidth = mapWidth;
-		this.mapHeight = mapHeight;
-		
-		
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+
+		addMouseMotionListener(this);
+
 	}
 
 	@Override
@@ -44,20 +59,40 @@ public class Display extends JPanel {
 		displayWidth = getWidth();
 		displayHeight = getHeight();
 		setDefaultScale();
-		
+
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
-		g2d.setColor(Color.BLACK);
 
+		for (int y = 0; y < gridMap.length; y++) {
+			for (int x = 0; x < gridMap[0].length; x++) {
+				switch (gridMap[y][x]) {
+				case 0:
+					g2d.setColor(Color.WHITE);
+					break;
+				case 1:
+					g2d.setColor(Color.RED);
+					break;
+				case 2:
+					g2d.setColor(Color.YELLOW);
+					break;
+				case 3:
+					g2d.setColor(Color.GREEN);
+					break;
+				default:
+					break;
+				}
+				g2d.fillRect(calculateDrawX(x), calculateDrawY(y), (int) scaleSize + 1, (int) scaleSize + 1);
+			}
+		}
+
+		g2d.setColor(Color.BLACK);
 		for (int y = 0; y < mapHeight + 1; y++) {
-			g2d.drawLine(left, top + (int) (y * scaleSize), left + (int) (mapWidth * scaleSize),
-					top + (int) (y * scaleSize));
+			g2d.drawLine(left, calculateDrawY(y), calculateDrawX(mapWidth), calculateDrawY(y));
 		}
 		for (int x = 0; x < mapWidth + 1; x++) {
-			g2d.drawLine(left + (int) (x * scaleSize), top, left + (int) (x * scaleSize),
-					top + (int) (mapHeight * scaleSize));
+			g2d.drawLine(calculateDrawX(x), top, calculateDrawX(x), calculateDrawY(mapHeight));
 		}
 	}
 
@@ -65,5 +100,43 @@ public class Display extends JPanel {
 		scaleSize = Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1;
 		top = (int) ((displayHeight - (scaleSize * mapHeight)) / 2);
 		left = (int) ((displayWidth - (scaleSize * mapWidth)) / 2);
+	}
+
+	private int[] calculateDrawPosition(int x, int y) {
+		return new int[] { left + (int) (x * scaleSize), top + (int) (y * scaleSize) };
+	}
+
+	private int calculateDrawX(int x) {
+		return left + (int) (x * scaleSize);
+	}
+
+	private int calculateDrawY(int y) {
+		return top + (int) (y * scaleSize);
+	}
+
+	private int[] calculateGridPosition(int x, int y) {
+		return new int[] { (int) Math.floor((x - left) / scaleSize), (int) Math.floor((y - top) / scaleSize) };
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		int[] gridPosition = calculateGridPosition(e.getX(), e.getY());
+		if (Arrays.equals(gridPosition, previousTileChanged)) {
+			return;
+		}
+		if (gridPosition[0] < 0 || gridPosition[0] >= mapWidth || gridPosition[1] < 0 || gridPosition[1] >= mapHeight) {
+			return;
+		}
+		gridMap[gridPosition[1]][gridPosition[0]] += 1;
+		gridMap[gridPosition[1]][gridPosition[0]] %= 4;
+		previousTileChanged = gridPosition;
+		repaint();
+
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		// TODO Auto-generated method stub
+
 	}
 }
