@@ -48,43 +48,73 @@ public class Window extends JFrame {
 		save.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (saveLocation == null) {
-					JFileChooser chooser = new JFileChooser();
-					FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
-					chooser.setFileFilter(filter);
-					int returnVal = chooser.showOpenDialog(null);
-					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						String file = chooser.getSelectedFile().getAbsolutePath();
-						if (!file.endsWith(".wcm")) {
-							file = file + ".wcm";
-						}
-						saveLocation = file;
-
-					} else {
+					if (!chooseSaveLocation()) { // User pressed cancel, so don't save it.
 						return;
 					}
 				}
-				try {
-					FileWriter writer = new FileWriter(saveLocation);
-					writer.write(display.mapToString());
-					writer.close();
-				} catch (Exception ex) {
-					throw new RuntimeException(ex);
-				}
+				saveFile();
 			}
 
 		});
+
 		JMenuItem saveAs = new JMenuItem("Save As...");
 		saveAs.setMnemonic(KeyEvent.VK_A);
 		saveAs.setDisplayedMnemonicIndex(5);
 		menu.add(saveAs);
+		saveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (!chooseSaveLocation()) { // User pressed cancel, so don't save it.
+					return;
+				}
+				saveFile();
+			}
+
+		});
+
 		JMenuItem open = new JMenuItem("Open");
 		open.setMnemonic(KeyEvent.VK_O);
 		menu.add(open);
+
 		menubar.add(menu);
 
 		setJMenuBar(menubar);
 
 		// TODO: Make a name for Warcode 2019
 		setTitle("Warcode 2019"); // This can be changed at a later time.
+	}
+
+	/**
+	 * 
+	 * @return boolean. true means it chose successfully, false means the user
+	 *         cancelled.
+	 */
+	private boolean chooseSaveLocation() {
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
+		chooser.setFileFilter(filter);
+		int returnVal = chooser.showOpenDialog(null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			String file = chooser.getSelectedFile().getAbsolutePath();
+			if (!file.endsWith(".wcm")) {
+				file = file + ".wcm";
+			}
+			saveLocation = file;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Saves the map
+	 */
+	private void saveFile() {
+		try {
+			FileWriter writer = new FileWriter(saveLocation);
+			writer.write(display.mapToString());
+			writer.close();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 }

@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.FileWriter;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
@@ -154,6 +155,16 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 			stringBuilder.append("\n");
 		}
 		return stringBuilder.substring(0, stringBuilder.length() - 1); //get rid of the last newline
+	}
+	
+	public void openMap(String fileLocation) {
+		try {
+			FileWriter writer = new FileWriter(fileLocation);
+			writer.write(mapToString());
+			writer.close();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	@Override
