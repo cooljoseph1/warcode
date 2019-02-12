@@ -55,7 +55,6 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		}
 
 		window = new Window(this);
-		// setPreferredSize(new Dimension(width, height));
 
 		window.setPreferredSize(new Dimension(width, height));
 		window.setLayout(new BorderLayout());
@@ -135,6 +134,8 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	}
 
 	private void setTile(int mouseX, int mouseY, Tile tileType) {
+		window.setStatus(Status.UNSAVED);
+		
 		int[] gridPosition = calculateGridPosition(mouseX, mouseY);
 		if (Arrays.equals(gridPosition, previousTileChanged)) {
 			return;

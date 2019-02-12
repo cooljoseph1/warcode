@@ -20,6 +20,8 @@ public class Window extends JFrame {
 	private static final long serialVersionUID = -585839154376527986L;
 	String saveLocation;
 	Display display;
+	private String fileName = "Untitiled";
+	private Status status = Status.UNSAVED;
 
 	public Window(Display display) {
 		super();
@@ -81,8 +83,7 @@ public class Window extends JFrame {
 
 		setJMenuBar(menubar);
 
-		// TODO: Make a name for Warcode 2019
-		setTitle("Warcode 2019"); // This can be changed at a later time.
+		setTitle("*Untitiled* - Warcode Map Maker");
 	}
 
 	/**
@@ -96,6 +97,10 @@ public class Window extends JFrame {
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showSaveDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			fileName = chooser.getSelectedFile().getName();
+			if (fileName.endsWith(".wcm")) {
+				fileName = fileName.substring(0, fileName.length() - 4);
+			}
 			String file = chooser.getSelectedFile().getAbsolutePath();
 			if (!file.endsWith(".wcm")) {
 				file = file + ".wcm";
@@ -117,6 +122,8 @@ public class Window extends JFrame {
 			writer.close();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
+		} finally {
+			setStatus(Status.SAVED);
 		}
 	}
 
@@ -129,6 +136,10 @@ public class Window extends JFrame {
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			fileName = chooser.getSelectedFile().getName();
+			if (fileName.endsWith(".wcm")) {
+				fileName = fileName.substring(0, fileName.length() - 4);
+			}
 			String file = chooser.getSelectedFile().getAbsolutePath();
 			if (!file.endsWith(".wcm")) {
 				file = file + ".wcm";
@@ -138,6 +149,16 @@ public class Window extends JFrame {
 			return;
 		}
 
+		setStatus(Status.SAVED);
 		display.openMap(saveLocation);
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+		if (status == Status.UNSAVED) {
+			setTitle("*" + fileName + "* - Warcode Map Maker");
+		} else if (status == Status.SAVED) {
+			setTitle(fileName + " - Warcode Map Maker");
+		}
 	}
 }
