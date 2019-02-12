@@ -8,8 +8,13 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -143,33 +148,54 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		repaint();
 
 	}
-	
+
 	public String mapToString() {
 		StringBuilder stringBuilder = new StringBuilder();
-		
-		
-		for(Tile[] row : tileMap) {
-			for(Tile tile : row) {
+
+		for (Tile[] row : tileMap) {
+			for (Tile tile : row) {
 				stringBuilder.append(tile);
 			}
 			stringBuilder.append("\n");
 		}
-		return stringBuilder.substring(0, stringBuilder.length() - 1); //get rid of the last newline
+		return stringBuilder.substring(0, stringBuilder.length() - 1); // get rid of the last newline
 	}
-	
+
 	public void openMap(String fileLocation) {
 		try {
-			FileWriter writer = new FileWriter(fileLocation);
-			writer.write(mapToString());
-			writer.close();
-		} catch (Exception ex) {
+
+			LinkedList<Tile[]> temporaryMap = new LinkedList<Tile[]>();
+			int height = 0;
+			int width = 0;
+
+			BufferedReader reader = new BufferedReader(new FileReader(fileLocation));
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				height += 1;
+				width = line.length();
+			}
+			reader.close();
+
+			tileMap = new Tile[height][width];
+
+			reader = new BufferedReader(new FileReader(fileLocation));
+			int y = 0;
+			for (String line = reader.readLine(); line != null; line = reader.readLine(), y++) {
+				for (int x = 0; x < line.length(); x++) {
+					tileMap[y][x] = Tile.fromChar(line.charAt(x));
+				}
+			}
+			reader.close();
+
+		} catch (IOException ex) {
 			throw new RuntimeException(ex);
+		} finally {
+			repaint();
 		}
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(!SwingUtilities.isLeftMouseButton(e)) {
+		if (!SwingUtilities.isLeftMouseButton(e)) {
 			return;
 		}
 		setTile(e.getX(), e.getY(), currentTileType);

@@ -3,7 +3,6 @@ package mapmaker;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.FileWriter;
 
 import javax.swing.ImageIcon;
@@ -54,7 +53,6 @@ public class Window extends JFrame {
 				}
 				saveFile();
 			}
-
 		});
 
 		JMenuItem saveAs = new JMenuItem("Save As...");
@@ -68,12 +66,16 @@ public class Window extends JFrame {
 				}
 				saveFile();
 			}
-
 		});
 
 		JMenuItem open = new JMenuItem("Open");
 		open.setMnemonic(KeyEvent.VK_O);
 		menu.add(open);
+		open.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openFile();
+			}
+		});
 
 		menubar.add(menu);
 
@@ -92,7 +94,7 @@ public class Window extends JFrame {
 		JFileChooser chooser = new JFileChooser();
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
 		chooser.setFileFilter(filter);
-		int returnVal = chooser.showOpenDialog(null);
+		int returnVal = chooser.showSaveDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			String file = chooser.getSelectedFile().getAbsolutePath();
 			if (!file.endsWith(".wcm")) {
@@ -116,5 +118,26 @@ public class Window extends JFrame {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+	}
+
+	/**
+	 * Opens a map
+	 */
+	private void openFile() {
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
+		chooser.setFileFilter(filter);
+		int returnVal = chooser.showOpenDialog(this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			String file = chooser.getSelectedFile().getAbsolutePath();
+			if (!file.endsWith(".wcm")) {
+				file = file + ".wcm";
+			}
+			saveLocation = file;
+		} else {
+			return;
+		}
+
+		display.openMap(saveLocation);
 	}
 }
