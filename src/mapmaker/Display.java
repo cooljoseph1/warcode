@@ -25,6 +25,7 @@ import warcode.Tile;
 public class Display extends JPanel implements MouseMotionListener, MouseListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
+	private static final Color FOREST_GREEN = 	new Color(0, 153, 0);
 
 	private Window window;
 
@@ -93,7 +94,13 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 					g2d.setColor(Color.YELLOW);
 					break;
 				case WOOD:
-					g2d.setColor(Color.GREEN);
+					g2d.setColor(FOREST_GREEN);
+					break;
+				case RED_CASTLE:
+					g2d.setColor(Color.RED);
+					break;
+				case BLUE_CASTLE:
+					g2d.setColor(Color.BLUE);
 					break;
 				default:
 					break;
@@ -135,7 +142,7 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	private void setTile(int mouseX, int mouseY, Tile tileType) {
 		window.setStatus(Status.UNSAVED);
-		
+
 		int[] gridPosition = calculateGridPosition(mouseX, mouseY);
 		if (Arrays.equals(gridPosition, previousTileChanged)) {
 			return;
@@ -148,6 +155,11 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		previousTileChanged = gridPosition;
 		repaint();
 
+	}
+
+	public void setTool(Tile tool) {
+		currentTileType = tool;
+		window.setCurrentTool(tool);
 	}
 
 	public String mapToString() {
@@ -235,6 +247,7 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 			break;
 		case MouseEvent.BUTTON3:
 			currentTileType = Tile.next(currentTileType);
+			window.setCurrentTool(currentTileType);
 			break;
 		default:
 			break;

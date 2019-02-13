@@ -1,7 +1,7 @@
 package warcode;
 
 public enum Tile {
-	PASSABLE, IMPASSABLE, GOLD, WOOD, INVALID;
+	PASSABLE, IMPASSABLE, GOLD, WOOD, INVALID, RED_CASTLE, BLUE_CASTLE; //only the first four are used by the WCRobot.
 
 	public static Tile next(Tile tile) {
 		switch (tile) {
@@ -13,6 +13,10 @@ public enum Tile {
 			return WOOD;
 		case WOOD:
 			return PASSABLE;
+		case RED_CASTLE:
+			return BLUE_CASTLE;
+		case BLUE_CASTLE:
+			return RED_CASTLE;
 		default:
 			return INVALID;
 		}
@@ -29,6 +33,10 @@ public enum Tile {
 			return "G";
 		case WOOD:
 			return "W";
+		case RED_CASTLE:
+			return "R";
+		case BLUE_CASTLE:
+			return "B";
 		default:
 			return "X";
 		}
@@ -37,30 +45,38 @@ public enum Tile {
 	public static Tile fromChar(char c) {
 		switch (c) {
 		case 'P':
-			return Tile.PASSABLE;
+			return PASSABLE;
 		case 'I':
-			return Tile.IMPASSABLE;
+			return IMPASSABLE;
 		case 'G':
-			return Tile.GOLD;
+			return GOLD;
 		case 'W':
-			return Tile.WOOD;
+			return WOOD;
+		case 'R':
+			return RED_CASTLE;
+		case 'B':
+			return BLUE_CASTLE;
 		default:
-			return Tile.INVALID;
+			return INVALID;
 		}
 	}
-	
+
 	public static Tile fromString(String c) {
 		switch (c) {
 		case "P":
-			return Tile.PASSABLE;
+			return PASSABLE;
 		case "I":
-			return Tile.IMPASSABLE;
+			return IMPASSABLE;
 		case "G":
-			return Tile.GOLD;
+			return GOLD;
 		case "W":
-			return Tile.WOOD;
+			return WOOD;
+		case "R":
+			return RED_CASTLE;
+		case "B":
+			return BLUE_CASTLE;
 		default:
-			return Tile.INVALID;
+			return INVALID;
 		}
 	}
 }
