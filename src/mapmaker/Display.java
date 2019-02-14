@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -14,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedList;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -40,7 +37,8 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	private Tile[][] tileMap;
 	private Tile currentTileType = Tile.IMPASSABLE;
 
-	private int[] startingTile = null;
+	private int[] startingPosition = null;
+	private int[] cursorPosition = null;
 
 	public Display(int width, int height, int mapWidth, int mapHeight) {
 		super();
@@ -113,6 +111,12 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		}
 		for (int x = 0; x < mapWidth + 1; x++) {
 			g2d.drawLine(calculateDrawX(x), top, calculateDrawX(x), calculateDrawY(mapHeight));
+		}
+
+		if (startingPosition != null) {
+			g2d.setColor(Color.RED);
+			g2d.drawRect(startingPosition[0], startingPosition[1], cursorPosition[0] - startingPosition[0],
+					cursorPosition[1] - startingPosition[1]);
 		}
 	}
 
@@ -190,8 +194,6 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	public void openMap(String fileLocation) {
 		try {
-
-			LinkedList<Tile[]> temporaryMap = new LinkedList<Tile[]>();
 			int height = 0;
 			int width = 0;
 
@@ -222,7 +224,11 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if(e.isShiftDown()) {
+		if (e.isShiftDown()) {
+			cursorPosition = new int[] { e.getX(), e.getY() };
+			repaint();
+		}
+		if (e.isShiftDown()) {
 			return;
 		}
 		if (!SwingUtilities.isLeftMouseButton(e)) {
@@ -233,7 +239,6 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -257,7 +262,8 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if (e.isShiftDown()) {
-			startingTile = new int[] { e.getX(), e.getY() };
+			startingPosition = new int[] { e.getX(), e.getY() };
+			cursorPosition = new int[] { e.getX(), e.getY() };
 		} else {
 			switch (e.getButton()) {
 			case MouseEvent.BUTTON1:
@@ -278,12 +284,11 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if (e.isShiftDown()) {
-			if (startingTile != null) {
-				setTileRange(startingTile[0], startingTile[1], e.getX(), e.getY(), currentTileType);
+			if (startingPosition != null) {
+				setTileRange(startingPosition[0], startingPosition[1], e.getX(), e.getY(), currentTileType);
+				startingPosition = null;
 			}
 		}
-		// TODO Auto-generated method stub
-
 	}
 
 }
