@@ -5,18 +5,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -25,7 +24,7 @@ import warcode.Tile;
 public class Display extends JPanel implements MouseMotionListener, MouseListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
-	private static final Color FOREST_GREEN = 	new Color(0, 153, 0);
+	private static final Color FOREST_GREEN = new Color(0, 153, 0);
 
 	private Window window;
 
@@ -40,6 +39,8 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	private int[] previousTileChanged = new int[] { -1, -1 };
 	private Tile[][] tileMap;
 	private Tile currentTileType = Tile.IMPASSABLE;
+
+	private int[] startingTile = null;
 
 	public Display(int width, int height, int mapWidth, int mapHeight) {
 		super();
@@ -61,9 +62,6 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		window.setLayout(new BorderLayout());
 		window.add(this, BorderLayout.CENTER);
 		window.pack();
-
-		window.setVisible(true);
-		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		addMouseMotionListener(this);
 		addMouseListener(this);
@@ -157,6 +155,22 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	}
 
+	private void setTileRange(int startingX, int startingY, int endX, int endY, Tile tileType) {
+		window.setStatus(Status.UNSAVED);
+		int[] startPosition = calculateGridPosition(startingX, startingY);
+		int[] endPosition = calculateGridPosition(endX, endY);
+		for (int x = startPosition[0]; x <= endPosition[0]; x++) {
+			for (int y = startPosition[1]; y <= endPosition[1]; y++) {
+				if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+					continue;
+				}
+				tileMap[y][x] = tileType;
+			}
+		}
+		repaint();
+
+	}
+
 	public void setTool(Tile tool) {
 		currentTileType = tool;
 		window.setCurrentTool(tool);
@@ -208,6 +222,9 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
+		if(e.isShiftDown()) {
+			return;
+		}
 		if (!SwingUtilities.isLeftMouseButton(e)) {
 			return;
 		}
@@ -239,25 +256,34 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		switch (e.getButton()) {
-		case MouseEvent.BUTTON1:
-			setTile(e.getX(), e.getY(), currentTileType);
-			break;
-		case MouseEvent.BUTTON2:
-			break;
-		case MouseEvent.BUTTON3:
-			currentTileType = Tile.next(currentTileType);
-			window.setCurrentTool(currentTileType);
-			break;
-		default:
-			break;
+		if (e.isShiftDown()) {
+			startingTile = new int[] { e.getX(), e.getY() };
+		} else {
+			switch (e.getButton()) {
+			case MouseEvent.BUTTON1:
+				setTile(e.getX(), e.getY(), currentTileType);
+				break;
+			case MouseEvent.BUTTON2:
+				break;
+			case MouseEvent.BUTTON3:
+				currentTileType = Tile.next(currentTileType);
+				window.setCurrentTool(currentTileType);
+				break;
+			default:
+				break;
+			}
 		}
-
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if (e.isShiftDown()) {
+			if (startingTile != null) {
+				setTileRange(startingTile[0], startingTile[1], e.getX(), e.getY(), currentTileType);
+			}
+		}
 		// TODO Auto-generated method stub
 
 	}
+
 }

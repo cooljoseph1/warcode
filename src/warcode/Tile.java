@@ -8,11 +8,11 @@ public enum Tile {
 		case PASSABLE:
 			return IMPASSABLE;
 		case IMPASSABLE:
-			return GOLD;
+			return PASSABLE;
 		case GOLD:
 			return WOOD;
 		case WOOD:
-			return PASSABLE;
+			return GOLD;
 		case RED_CASTLE:
 			return BLUE_CASTLE;
 		case BLUE_CASTLE:

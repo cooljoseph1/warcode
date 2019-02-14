@@ -3,6 +3,8 @@ package mapmaker;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.FileWriter;
 
 import javax.swing.ButtonGroup;
@@ -12,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -53,6 +56,34 @@ public class Window extends JFrame {
 
 		setTitle("*Untitiled* - Warcode Map Maker");
 		setCurrentTool(Tile.IMPASSABLE);
+
+		setVisible(true);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+		Window window = this;
+		addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosing(WindowEvent we) {
+				if (status == Status.UNSAVED) {
+					String ObjButtons[] = { "Yes", "No", "Cancel" };
+					int PromptResult = JOptionPane.showOptionDialog(window, "Save before exiting?", "Exit",
+							JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, ObjButtons, ObjButtons[1]);
+					if (PromptResult == 2) {
+						return;
+					}
+					if (PromptResult == 0) {
+						if (saveLocation == null) {
+							if (!chooseSaveLocation()) {
+								return;
+							}
+						}
+						saveFile();
+					}
+				}
+				System.exit(0);
+			}
+		});
 	}
 
 	/**
