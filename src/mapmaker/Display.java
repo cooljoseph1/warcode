@@ -70,6 +70,17 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 	}
 
+	public void reset() {
+		tileMap = new Tile[mapHeight][mapWidth];
+		// initialize tileMap to empty tiles
+		for (int y = 0; y < tileMap.length; y++) {
+			for (int x = 0; x < tileMap[0].length; x++) {
+				tileMap[y][x] = Tile.PASSABLE;
+			}
+		}
+		repaint();
+	}
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		displayWidth = getWidth();
@@ -88,7 +99,7 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 					g2d.setColor(Color.WHITE);
 					break;
 				case IMPASSABLE:
-					g2d.setColor(Color.BLACK);
+					g2d.setColor(Color.DARK_GRAY);
 					break;
 				case GOLD:
 					g2d.setColor(Color.YELLOW);
@@ -120,8 +131,7 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 		if (startingPosition != null) {
 			g2d.setColor(Color.RED);
 			g2d.drawRect(Math.min(startingPosition[0], cursorPosition[0]),
-					Math.min(startingPosition[1], cursorPosition[1]),
-					Math.abs(cursorPosition[0] - startingPosition[0]),
+					Math.min(startingPosition[1], cursorPosition[1]), Math.abs(cursorPosition[0] - startingPosition[0]),
 					Math.abs(cursorPosition[1] - startingPosition[1]));
 		}
 	}

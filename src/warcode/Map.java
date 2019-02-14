@@ -1,5 +1,8 @@
 package warcode;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -11,10 +14,36 @@ public class Map {
 	public final int width;
 	public final int height;
 
-	public Map(int seed) {
-		width = 100;
-		height = 100;
-		// TODO: make map from a file.
+	public Map(String mapName) {
+		try {
+			int height = 0;
+			int width = 0;
+
+			BufferedReader reader = new BufferedReader(new FileReader("Resources/Maps/" + mapName + ".wcm"));
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				height += 1;
+				width = line.length();
+			}
+			reader.close();
+
+			this.width = width;
+			this.height = height;
+
+			passableMap = new Tile[height][width];
+
+			reader = new BufferedReader(new FileReader("Resources/Maps/" + mapName + ".wcm"));
+			int y = 0;
+			for (String line = reader.readLine(); line != null; line = reader.readLine(), y++) {
+				for (int x = 0; x < line.length(); x++) {
+					passableMap[y][x] = Tile.fromChar(line.charAt(x));
+				}
+			}
+			reader.close();
+
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		} finally {
+		}
 
 	}
 

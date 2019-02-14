@@ -1,5 +1,6 @@
 package mapmaker;
 
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -16,6 +17,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -96,9 +98,27 @@ public class Window extends JFrame {
 			// make file drop down
 			JMenu fileMenu = new JMenu("File");
 			fileMenu.setMnemonic(KeyEvent.VK_F);
+			JMenuItem new_ = new JMenuItem();
+			new_.setText("New");
+			new_.setMnemonic(KeyEvent.VK_N);
+			new_.setAccelerator(KeyStroke.getKeyStroke('N', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+			fileMenu.add(new_);
+			new_.addActionListener(new ActionListener() {
+				
+				public void actionPerformed(ActionEvent e) {
+					fileName = "Untitled";
+					saveLocation = null;
+					setStatus(Status.UNSAVED);
+					display.reset();
+				}
+			});
+			
+			fileMenu.addSeparator();
+			
 			JMenuItem save = new JMenuItem();
 			save.setText("Save");
 			save.setMnemonic(KeyEvent.VK_S);
+			save.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 			fileMenu.add(save);
 			save.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -114,6 +134,7 @@ public class Window extends JFrame {
 			JMenuItem saveAs = new JMenuItem("Save As...");
 			saveAs.setMnemonic(KeyEvent.VK_A);
 			saveAs.setDisplayedMnemonicIndex(5);
+			saveAs.setAccelerator(KeyStroke.getKeyStroke('A', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 			fileMenu.add(saveAs);
 			saveAs.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -126,6 +147,7 @@ public class Window extends JFrame {
 
 			JMenuItem open = new JMenuItem("Open");
 			open.setMnemonic(KeyEvent.VK_O);
+			open.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 			fileMenu.add(open);
 			open.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -163,6 +185,8 @@ public class Window extends JFrame {
 				}
 			});
 
+			toolMenu.addSeparator();
+
 			gold = new JRadioButton();
 			gold.setText("Gold");
 			gold.setMnemonic(KeyEvent.VK_G);
@@ -184,6 +208,8 @@ public class Window extends JFrame {
 					display.setTool(Tile.WOOD);
 				}
 			});
+
+			toolMenu.addSeparator();
 
 			redCastle = new JRadioButton();
 			redCastle.setText("Red Castle");
@@ -243,7 +269,7 @@ public class Window extends JFrame {
 	 *         cancelled.
 	 */
 	private boolean chooseSaveLocation() {
-		JFileChooser chooser = new JFileChooser();
+		JFileChooser chooser = new JFileChooser("Resources/Maps");
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showSaveDialog(this);
@@ -282,7 +308,7 @@ public class Window extends JFrame {
 	 * Opens a map
 	 */
 	private void openFile() {
-		JFileChooser chooser = new JFileChooser();
+		JFileChooser chooser = new JFileChooser("Resources/Maps");
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
@@ -312,4 +338,5 @@ public class Window extends JFrame {
 			setTitle(fileName + " - Warcode Map Maker");
 		}
 	}
+	
 }

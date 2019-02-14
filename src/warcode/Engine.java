@@ -31,6 +31,48 @@ public class Engine {
 			throw e;
 		}
 	}
+	
+	public Winner playGame(String mapName) {
+
+		map = new Map(mapName);
+
+		// Add initial castle locations
+		for (InitialCastle castleInfo : map.getCastleLocations()) {
+			
+			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle);
+		}
+
+		// Run game until one wins or turn reaches 1000.
+		boolean redWon = false;
+		boolean blueWon = false;
+		int turn = 0;
+		while (!redWon && !blueWon && turn < 1000) {
+			redWon = true;
+			blueWon = true;
+
+			for (Iterator<Integer> ids = idQueue.iterator(); ids.hasNext();) {
+				Integer id = ids.next();
+				WCRobot robot = getRobot(id);
+				if (robot.me.team == Team.RED) {
+					blueWon = false;
+				} else {
+					redWon = false;
+				}
+
+				robot._do_turn();
+			}
+
+			turn++;
+		}
+
+		if (redWon) {
+			return Winner.RED;
+		} else if (blueWon) {
+			return Winner.BLUE;
+		} else {
+			return Winner.TIE;
+		}
+	}
 
 	protected Tile[][] getPassableMap() {
 		return map.getPassableMapCopy();
@@ -203,48 +245,6 @@ public class Engine {
 	private void removeAllRobots(Collection<Integer> ids) {
 		for (int id : ids) {
 			removeRobot(id);
-		}
-	}
-
-	public Winner playGame(int seed) {
-
-		map = new Map(seed);
-
-		// Add initial castle locations
-		for (InitialCastle castleInfo : map.getCastleLocations()) {
-			
-			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle);
-		}
-
-		// Run game until one wins or turn reaches 1000.
-		boolean redWon = false;
-		boolean blueWon = false;
-		int turn = 0;
-		while (!redWon && !blueWon && turn < 1000) {
-			redWon = true;
-			blueWon = true;
-
-			for (Iterator<Integer> ids = idQueue.iterator(); ids.hasNext();) {
-				Integer id = ids.next();
-				WCRobot robot = getRobot(id);
-				if (robot.me.team == Team.RED) {
-					blueWon = false;
-				} else {
-					redWon = false;
-				}
-
-				robot._do_turn();
-			}
-
-			turn++;
-		}
-
-		if (redWon) {
-			return Winner.RED;
-		} else if (blueWon) {
-			return Winner.BLUE;
-		} else {
-			return Winner.TIE;
 		}
 	}
 
