@@ -119,8 +119,10 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 
 		if (startingPosition != null) {
 			g2d.setColor(Color.RED);
-			g2d.drawRect(startingPosition[0], startingPosition[1], cursorPosition[0] - startingPosition[0],
-					cursorPosition[1] - startingPosition[1]);
+			g2d.drawRect(Math.min(startingPosition[0], cursorPosition[0]),
+					Math.min(startingPosition[1], cursorPosition[1]),
+					Math.abs(cursorPosition[0] - startingPosition[0]),
+					Math.abs(cursorPosition[1] - startingPosition[1]));
 		}
 	}
 
@@ -289,7 +291,9 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	public void mouseReleased(MouseEvent e) {
 		if (e.isShiftDown()) {
 			if (startingPosition != null) {
-				setTileRange(startingPosition[0], startingPosition[1], e.getX(), e.getY(), currentTileType);
+				setTileRange(Math.min(startingPosition[0], e.getX()), Math.min(startingPosition[1], e.getY()),
+						Math.max(startingPosition[0], e.getX()), Math.max(startingPosition[1], e.getY()),
+						currentTileType);
 				startingPosition = null;
 			}
 		}
@@ -298,22 +302,22 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 	@Override
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_SHIFT) {
+		if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
 			startingPosition = null;
 			repaint();
 		}
-		
+
 	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }
