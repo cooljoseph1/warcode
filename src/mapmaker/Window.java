@@ -66,7 +66,7 @@ public class Window extends JFrame {
 			@Override
 			public void windowClosing(WindowEvent we) {
 				if (status == Status.UNSAVED) {
-					String ObjButtons[] = { "Yes", "No", "Cancel" };
+					String ObjButtons[] = { "Save", "No", "Cancel" };
 					int PromptResult = JOptionPane.showOptionDialog(window, "Save before exiting?", "Exit",
 							JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, ObjButtons, ObjButtons[1]);
 					if (PromptResult == 2) {
