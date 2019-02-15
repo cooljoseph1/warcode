@@ -1,6 +1,6 @@
 package warcode;
 
-public class WCRobot {
+public abstract class WCRobot {
 	public Unit me;
 	public Tile[][] map;
 	public int[][] goldMap;
@@ -20,13 +20,18 @@ public class WCRobot {
 	private boolean given = false;
 	private boolean built = false;
 	private boolean signalled = false;
-
-	public WCRobot(Unit me) {
-		this(me, 200);
+	
+	public WCRobot() {
+		
+	}
+	
+	public WCRobot(Unit me, Engine engine) {
+		this(me, engine, 200);
 	}
 
-	public WCRobot(Unit me, int time) {
+	public WCRobot(Unit me, Engine engine, int time) {
 		this.me = me;
+		this.engine = engine;
 		this.time = time;
 	}
 

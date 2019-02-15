@@ -1,7 +1,12 @@
 package warcode;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,26 +24,26 @@ public class Engine {
 
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
-			this.redConstructor = red.getDeclaredConstructor(new Class[] { Unit.class });
+			redConstructor = red.getConstructor(Unit.class, Engine.class);
 		} catch (NoSuchMethodException e) {
 			System.out.println("Red failed to initialize due to a bad constructor.");
 			throw e;
 		}
 		try {
-			this.blueConstructor = blue.getDeclaredConstructor(new Class[] { Unit.class });
+			blueConstructor = blue.getConstructor(Unit.class, Engine.class);
 		} catch (NoSuchMethodException e) {
 			System.out.println("Blue failed to initialize due to a bad constructor.");
 			throw e;
 		}
 	}
-	
+
 	public Winner playGame(String mapName) {
 
 		map = new Map(mapName);
 
 		// Add initial castle locations
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
-			
+
 			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle);
 		}
 
@@ -116,7 +121,7 @@ public class Engine {
 			}
 		}
 
-		return (Unit[]) units.toArray();
+		return units.toArray(new Unit[units.size()]);
 	}
 
 	protected boolean isOpen(int x, int y) {
@@ -147,6 +152,7 @@ public class Engine {
 		}
 		return false;
 	}
+
 	/**
 	 * 
 	 * @param x
@@ -156,8 +162,8 @@ public class Engine {
 	 */
 	protected void addResources(int x, int y, int gold, int wood) {
 		Unit castleAtLocation = null;
-		for(Unit castle : castles) {
-			if(castle.getX() == x && castle.getY() == y) {
+		for (Unit castle : castles) {
+			if (castle.getX() == x && castle.getY() == y) {
 				castleAtLocation = castle;
 				break;
 			}
@@ -165,6 +171,7 @@ public class Engine {
 		castleAtLocation.addGold(gold);
 		castleAtLocation.addWood(wood);
 	}
+
 	protected void decreaseGold(int x, int y, int amount) {
 		map.decreaseGold(x, y, amount);
 	}
@@ -186,7 +193,7 @@ public class Engine {
 		}
 		removeAllRobots(idsToRemove);
 	}
-	
+
 	protected void makeRobot(int x, int y, Team team, UnitType unitType) {
 		int id;
 		do {
@@ -208,9 +215,9 @@ public class Engine {
 		WCRobot robot = null;
 		try {
 			if (team == Team.RED) {
-				robot = redConstructor.newInstance(unit);
+				robot = redConstructor.newInstance(unit, this);
 			} else {
-				robot = blueConstructor.newInstance(unit);
+				robot = blueConstructor.newInstance(unit, this);
 			}
 
 		} catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
@@ -258,5 +265,30 @@ public class Engine {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return dx * dx + dy * dy;
+	}
+
+	public static void main(String[] args) {
+		ClassLoader classLoader = Engine.class.getClassLoader();
+
+		Class<WCRobot> red;
+		try {
+			red = (Class<WCRobot>) classLoader.loadClass(args[0]);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+
+		Class<WCRobot> blue;
+		try {
+			blue = (Class<WCRobot>) classLoader.loadClass(args[1]);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		Engine engine;
+		try {
+			engine = new Engine(red, blue);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		System.out.println(engine.playGame(args[2]));
 	}
 }

@@ -11,6 +11,9 @@ public final class SPECS {
 	public static final int MINE_AMOUNT = 10;
 	public static final int WOOD_AMOUNT = 10;
 	
+	public static final int GOLD_MINE_AMOUNT = 2000;
+	public static final int TREE_AMOUNT = 200;
+	
 	public static final int MAX_MAP_SIZE = 100;
 	public static final int MIN_MAP_SIZE = 30;
 }
