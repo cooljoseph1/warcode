@@ -1,12 +1,7 @@
 package warcode;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,6 +16,11 @@ public class Engine {
 	private LinkedList<Integer> idQueue = new LinkedList<Integer>();
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
 	private LinkedList<Unit> castles = new LinkedList<Unit>();
+
+	private int redGold;
+	private int redWood;
+	private int blueGold;
+	private int blueWood;
 
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
@@ -160,7 +160,7 @@ public class Engine {
 	 * @param gold
 	 * @param wood
 	 */
-	protected void addResources(int x, int y, int gold, int wood) {
+	protected void giveResources(int x, int y, int gold, int wood) {
 		Unit castleAtLocation = null;
 		for (Unit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
@@ -168,8 +168,16 @@ public class Engine {
 				break;
 			}
 		}
-		castleAtLocation.addGold(gold);
-		castleAtLocation.addWood(wood);
+		if (castleAtLocation == null) {
+			return;
+		}
+		if (castleAtLocation.team == Team.RED) {
+			redGold += gold;
+			redWood += wood;
+		} else {
+			blueGold += gold;
+			blueWood += wood;
+		}
 	}
 
 	protected void decreaseGold(int x, int y, int amount) {
@@ -178,6 +186,38 @@ public class Engine {
 
 	protected void decreaseWood(int x, int y, int amount) {
 		map.decreaseWood(x, y, amount);
+	}
+
+	protected void addRedGold(int amount) {
+		redGold += amount;
+	}
+
+	protected void addBlueGold(int amount) {
+		blueGold += amount;
+	}
+
+	protected void addRedWood(int amount) {
+		redWood += amount;
+	}
+
+	protected void addBlueWood(int amount) {
+		blueWood += amount;
+	}
+
+	protected int getRedGold() {
+		return redGold;
+	}
+
+	protected int getRedWood() {
+		return redWood;
+	}
+
+	protected int getBlueGold() {
+		return blueGold;
+	}
+
+	protected int getBlueWood() {
+		return blueWood;
 	}
 
 	protected void attack(int x, int y, UnitType unitType) {
@@ -199,8 +239,16 @@ public class Engine {
 		do {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
 		} while (idRobotMap.containsKey(id));
-		Unit castle = new Unit(id, unitType, team, x, y);
-		addRobot(castle, team);
+		Unit unit = new Unit(id, unitType, team, x, y);
+		addRobot(unit, team);
+		if (team == Team.RED) {
+			redGold -= unitType.CONSTRUCTION_GOLD;
+			redWood -= unitType.CONSTRUCTION_WOOD;
+		} else {
+			blueGold -= unitType.CONSTRUCTION_GOLD;
+			blueWood -= unitType.CONSTRUCTION_WOOD;
+		}
+
 	}
 
 	protected Unit getUnit(int id) {
@@ -214,11 +262,13 @@ public class Engine {
 	private void addRobot(Unit unit, Team team) {
 		WCRobot robot = null;
 		try {
+			long startTime = System.nanoTime();
 			if (team == Team.RED) {
 				robot = redConstructor.newInstance(unit, this);
 			} else {
 				robot = blueConstructor.newInstance(unit, this);
 			}
+			robot.subtractTime(System.nanoTime() - startTime);
 
 		} catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
 			if (team == Team.RED) {
