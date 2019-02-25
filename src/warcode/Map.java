@@ -10,7 +10,7 @@ public class Map {
 	private Tile[][] passableMap;
 	private int[][] goldMap;
 	private int[][] woodMap;
-	private LinkedList<InitialCastle> initialCastleLocations;
+	private LinkedList<InitialCastle> initialCastleLocations = new LinkedList<InitialCastle>();
 	public final int width;
 	public final int height;
 
@@ -42,7 +42,32 @@ public class Map {
 
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
-		} finally {
+		}
+		
+		goldMap = new int[this.height][this.width];
+		woodMap = new int[this.height][this.width];
+		
+		for(int y = 0; y<this.height; y++) {
+			for(int x = 0; x<this.width; x++) {
+				switch(passableMap[y][x]) {
+				case RED_CASTLE:
+					initialCastleLocations.add(new InitialCastle(Team.RED, x, y));
+					passableMap[y][x] = Tile.PASSABLE;
+					break;
+				case BLUE_CASTLE:
+					initialCastleLocations.add(new InitialCastle(Team.BLUE, x, y));
+					passableMap[y][x] = Tile.PASSABLE;
+					break;
+				case GOLD:
+					goldMap[y][x] = SPECS.GOLD_MINE_AMOUNT;
+					break;
+				case WOOD:
+					woodMap[y][x] = SPECS.TREE_AMOUNT;
+					break;
+				default:
+					break;
+				}
+			}
 		}
 
 	}

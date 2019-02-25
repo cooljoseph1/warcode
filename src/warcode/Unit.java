@@ -82,7 +82,9 @@ public class Unit {
 
 	protected void decreaseGold(int gold) {
 		this.gold -= gold;
-		throw new Error("Uh oh, how is your gold below zero?");
+		if (this.gold < 0) {
+			throw new Error("Uh oh, how is your gold below zero?");
+		}
 	}
 
 	protected void setHealth(int health) {
@@ -98,6 +100,9 @@ public class Unit {
 
 	protected void setSignal(int value) {
 		this.signal = new Signal(value, team, id, unitType);
+	}
+	protected void resetSignal() {
+		this.signal = null;
 	}
 
 	public int getGold() {

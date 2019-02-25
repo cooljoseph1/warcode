@@ -1,34 +1,24 @@
 package warcode;
 
 public final class SPECS {
-	public static final UnitType Castle = 	new UnitType(100, 	250, 	0, 		500, 	0, 		0, 		0, 		100, 	0);
-	public static final UnitType Peasant = 	new UnitType(10, 	25, 	100, 	25, 	0, 		0, 		5, 		100, 	0);
-	public static final UnitType Archer = 	new UnitType(15, 	50, 	0, 		50, 	10, 	150, 	4, 		180, 	0);
-	public static final UnitType Mage = 	new UnitType(30, 	100, 	0, 		80, 	25, 	100, 	2, 		100, 	2);
-	public static final UnitType Knight = 	new UnitType(25, 	100, 	0, 		150, 	30, 	4, 		10, 	150, 	0);
+	public static final UnitType Castle = UnitType.CASTLE;
+	public static final UnitType Peasant = UnitType.PEASANT;
+	public static final UnitType Archer = UnitType.ARCHER;
+	public static final UnitType Mage = UnitType.MAGE;
+	public static final UnitType Knight = UnitType.KNIGHT;
 
 	public static final int MAX_RESOURCES = 100;
 	public static final int MINE_AMOUNT = 10;
 	public static final int WOOD_AMOUNT = 10;
-	
+
+	public static final int GOLD_MINE_AMOUNT = 2000;
+	public static final int TREE_AMOUNT = 200;
+
 	public static final int MAX_MAP_SIZE = 100;
 	public static final int MIN_MAP_SIZE = 30;
+	
+	public static final long INITIAL_TIME = 20000000; //time in nanoseconds - 20 milliseconds
+	public static final long INCREMENT_TIME = 5000000;  //time in nanoseconds - 5 milliseconds
 }
 
-final class UnitType {
-	final int CONSTRUCTION_GOLD, CONSTRUCTION_WOOD, RESOURCE_CAPACITY, INITIAL_HEALTH, ATTACK_DAMAGE, ATTACK_RADIUS,
-			MOVEMENT_SPEED, VISION_RADIUS, SPLASH_RADIUS;
 
-	UnitType(int constructionGold, int constructionWood, int resourceCapacity, int initialHealth, int attackDamage,
-			int attackRadius, int movementSpeed, int visionRadius, int splashRadius) {
-			CONSTRUCTION_GOLD = constructionGold;
-			CONSTRUCTION_WOOD = constructionWood;
-			RESOURCE_CAPACITY = resourceCapacity;
-			INITIAL_HEALTH = initialHealth;
-			ATTACK_DAMAGE = attackDamage;
-			ATTACK_RADIUS = attackRadius;
-			MOVEMENT_SPEED = movementSpeed;
-			VISION_RADIUS = visionRadius;
-			SPLASH_RADIUS = splashRadius;
-	}
-}

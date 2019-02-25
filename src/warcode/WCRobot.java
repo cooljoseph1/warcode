@@ -1,6 +1,17 @@
 package warcode;
 
-public class WCRobot {
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+
+public abstract class WCRobot {
+	class RunTurn implements Callable<Void> {
+		@Override
+		public Void call() throws GameException {
+			turn();
+			return null;
+		}
+	}
+
 	public Unit me;
 	public Tile[][] map;
 	public int[][] goldMap;
@@ -10,33 +21,60 @@ public class WCRobot {
 	public Signal[] signals;
 	public int gold;
 	public int wood;
-	public int time;
+	public long time;
 
 	private Engine engine;
 
-	private boolean moved = false;
-	private boolean attacked = false;
-	private boolean gathered = false;
-	private boolean given = false;
-	private boolean built = false;
-	private boolean signalled = false;
+	private boolean moved = true;
+	private boolean attacked = true;
+	private boolean gathered = true;
+	private boolean given = true;
+	private boolean built = true;
+	private boolean signalled = true;
 
-	public WCRobot(Unit me) {
-		this(me, 200);
+	private RunTurn runTurn;
+
+	public WCRobot() {
+
 	}
 
-	public WCRobot(Unit me, int time) {
+	public WCRobot(Unit me, Engine engine) {
+		this(me, engine, SPECS.INITIAL_TIME);
+	}
+
+	/**
+	 * 
+	 * @param me
+	 * @param engine
+	 * @param time
+	 * 
+	 *               Time in milliseconds
+	 */
+	public WCRobot(Unit me, Engine engine, long time) {
 		this.me = me;
+		this.engine = engine;
 		this.time = time;
+		this.runTurn = new RunTurn();
+
 	}
 
 	void _do_turn() {
+		if (time < 0) {
+			System.out.println(String.format("Time overdrawn by %f milliseconds", -time / 1000000f));
+			time += SPECS.INCREMENT_TIME; // add time to clock
+			return;
+		} else {
+			time += SPECS.INCREMENT_TIME; // add time to clock
+		}
+
 		moved = false;
 		attacked = false;
 		gathered = false;
 		given = false;
+		signalled = false;
 		built = false;
-		
+		me.resetSignal();
+
 		map = engine.getPassableMap();
 		goldMap = engine.getGoldMap();
 		woodMap = engine.getWoodMap();
@@ -44,13 +82,23 @@ public class WCRobot {
 		visibleUnits = engine.getVisibleUnits(me);
 		visibleUnitMap = engine.getVisibleUnitMap(me);
 
-		turn();
+		long startTime = System.nanoTime();
+		FutureTask<Void> task = new FutureTask<Void>(runTurn);
+		Thread t = new Thread(task);
+		t.start();
+		try {
+			t.join(200); // allow thread to be run for 200 milliseconds before interrupting it
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (t.isAlive()) {
+			t.stop();
+		}
+		time -= System.nanoTime() - startTime; // subtract off time spent
 	}
 
 	// Override this method in your subclass.
-	public void turn() {
-
-	}
+	public abstract void turn() throws GameException;
 
 	public final void move(int x, int y) throws MoveException {
 		if (me.unitType == SPECS.Castle) {
@@ -121,7 +169,7 @@ public class WCRobot {
 			me.decreaseWood(wood);
 			me.decreaseGold(gold);
 
-			engine.addResources(x, y, gold, wood);
+			engine.giveResources(x, y, gold, wood);
 			given = true;
 		}
 
@@ -139,7 +187,7 @@ public class WCRobot {
 	}
 
 	public final void buildUnit(int x, int y, UnitType unitType) throws BuildException {
-		if(built) {
+		if (built) {
 			throw new BuildException("Robot can only build one unit per turn");
 		} else if (me.unitType != SPECS.Castle && me.unitType != SPECS.Peasant) {
 			throw new BuildException("Only peasants and castles can build units");
@@ -149,6 +197,10 @@ public class WCRobot {
 			throw new BuildException("Castles cannot build other castles");
 		} else if (Engine.distanceSquared(x, y, me.getX(), me.getY()) > 2) {
 			throw new BuildException("Robot can only build on adjacent squares");
+		} else if (getGold() < unitType.CONSTRUCTION_GOLD) {
+			throw new BuildException("Not enough gold to build unit");
+		} else if (getWood() < unitType.CONSTRUCTION_WOOD) {
+			throw new BuildException("Not enough wood to build unit");
 		} else {
 			engine.makeRobot(x, y, me.team, unitType);
 			built = true;
@@ -157,7 +209,7 @@ public class WCRobot {
 	}
 
 	public final void signal(int message) throws SignalException {
-		if(signalled) {
+		if (signalled) {
 			throw new SignalException("Robot can only signal once per turn");
 		} else {
 			this.me.setSignal(message);
@@ -184,5 +236,33 @@ public class WCRobot {
 
 	public final Signal getSignal(Unit unit) {
 		return unit.getSignal();
+	}
+
+	public final int getGold() {
+		if (me.team == Team.RED) {
+			return engine.getRedGold();
+		} else {
+			return engine.getBlueGold();
+		}
+	}
+
+	public final int getWood() {
+		if (me.team == Team.RED) {
+			return engine.getRedWood();
+		} else {
+			return engine.getBlueWood();
+		}
+	}
+
+	/**
+	 * 
+	 * @return time in nanoseconds
+	 */
+	public final long getTime() {
+		return time;
+	}
+
+	protected void subtractTime(long time) {
+		this.time -= time;
 	}
 }
