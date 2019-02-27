@@ -1,4 +1,4 @@
-package viewer;
+package warcode;
 
 public class Operation {
 	private final OperationType operationType;

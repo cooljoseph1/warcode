@@ -1,11 +1,13 @@
 package warcode;
 
+import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.StringJoiner;
 
 public class Engine {
 	public final Constructor<WCRobot> redConstructor;
@@ -21,6 +23,10 @@ public class Engine {
 	private int redWood;
 	private int blueGold;
 	private int blueWood;
+	private int turn = 0;
+
+	private StringJoiner saveInfo = new StringJoiner("\n");
+	private StringJoiner turnOperations;
 
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
@@ -50,8 +56,12 @@ public class Engine {
 		// Run game until one wins or turn reaches 1000.
 		boolean redWon = false;
 		boolean blueWon = false;
-		int turn = 0;
+		turn = 0;
+
 		while (!redWon && !blueWon && turn < 1000) {
+			// string joiner of the operations that occurred in the turn.
+			turnOperations = new StringJoiner(";");
+
 			redWon = true;
 			blueWon = true;
 
@@ -68,6 +78,8 @@ public class Engine {
 			}
 
 			turn++;
+			// Add turn's operations to save info, so it can be saved
+			saveInfo.add(turnOperations.toString());
 		}
 
 		if (redWon) {
@@ -77,6 +89,29 @@ public class Engine {
 		} else {
 			return Winner.TIE;
 		}
+	}
+
+	/**
+	 * 
+	 * @param fileLocation
+	 */
+	public void save(String fileName) {
+		try {
+			FileWriter writer = new FileWriter("Replays/" + fileName + ".wcr");
+			// save turn, with, height, and then all of the operations
+			writer.write(turn + "\n");
+			writer.write(map.getWidth() + "\n");
+			writer.write(map.getHeight() + "\n");
+			writer.write(map.toString() + "\n");
+			writer.write(saveInfo.toString());
+			writer.close();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+	
+	protected void addOperation(Operation operation) {
+		turnOperations.add(operation.toString());
 	}
 
 	protected Tile[][] getPassableMap() {
@@ -233,8 +268,15 @@ public class Engine {
 		}
 		removeAllRobots(idsToRemove);
 	}
-
-	protected void makeRobot(int x, int y, Team team, UnitType unitType) {
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 * @param team
+	 * @param unitType
+	 * @return id of new unit
+	 */
+	protected int makeRobot(int x, int y, Team team, UnitType unitType) {
 		int id;
 		do {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
@@ -248,7 +290,8 @@ public class Engine {
 			blueGold -= unitType.CONSTRUCTION_GOLD;
 			blueWood -= unitType.CONSTRUCTION_WOOD;
 		}
-
+		
+		return id;
 	}
 
 	protected Unit getUnit(int id) {
@@ -340,5 +383,6 @@ public class Engine {
 			throw new RuntimeException(e);
 		}
 		System.out.println(engine.playGame(args[2]));
+		engine.save(args[3]);
 	}
 }

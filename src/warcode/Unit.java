@@ -128,4 +128,16 @@ public class Unit {
 	public int getHealth() {
 		return health;
 	}
+	
+	public int getId() {
+		return id;
+	}
+	
+	public UnitType getUnitType() {
+		return unitType;
+	}
+	
+	public Team getTeam() {
+		return team;
+	}
 }

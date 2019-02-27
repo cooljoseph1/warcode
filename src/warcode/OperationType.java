@@ -1,7 +1,7 @@
-package viewer;
+package warcode;
 
 public enum OperationType {
-	MOVE, ATTACK, MINE, COLLECT, GIVE, CREATE, DO_NOTHING;
+	MOVE, ATTACK, MINE, COLLECT, GIVE, BUILD, SIGNAL, DO_NOTHING;
 	
 	public static OperationType fromString(String s) {
 		switch(s) {
@@ -15,8 +15,10 @@ public enum OperationType {
 			return COLLECT;
 		case "G":
 			return GIVE;
-		case "T":
-			return CREATE;
+		case "B":
+			return BUILD;
+		case "S":
+			return SIGNAL;
 		default:
 			return DO_NOTHING;
 		}
@@ -34,8 +36,10 @@ public enum OperationType {
 			return "C";
 		case GIVE:
 			return "G";
-		case CREATE:
-			return "T";
+		case BUILD:
+			return "B";
+		case SIGNAL:
+			return "S";
 		default:
 			return "I";
 		}

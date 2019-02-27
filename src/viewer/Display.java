@@ -18,6 +18,7 @@ import java.util.Arrays;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import warcode.Operation;
 import warcode.Tile;
 import warcode.Unit;
 
@@ -145,9 +146,11 @@ public class Display extends JPanel {
 			
 			BufferedReader reader = new BufferedReader(new FileReader(fileLocation));
 			
+			//Important:  gameLength must be the first line of the save file.
 			gameLength = Integer.parseInt(reader.readLine());
 			turns = new Operation[gameLength][];
 			
+			//Important:  the next two lines must be mapWidth and mapHeight respectively.
 			mapWidth = Integer.parseInt(reader.readLine());
 			mapHeight = Integer.parseInt(reader.readLine());
 			tileMap = new Tile[mapHeight][mapWidth];

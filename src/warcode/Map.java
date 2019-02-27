@@ -3,6 +3,8 @@ package warcode;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -11,11 +13,15 @@ public class Map {
 	private int[][] goldMap;
 	private int[][] woodMap;
 	private LinkedList<InitialCastle> initialCastleLocations = new LinkedList<InitialCastle>();
+
+	private final String origMap;
 	public final int width;
 	public final int height;
 
 	public Map(String mapName) {
 		try {
+			origMap = new String(Files.readAllBytes(Paths.get("Resources/Maps/" + mapName + ".wcm")));
+			
 			int height = 0;
 			int width = 0;
 
@@ -43,13 +49,13 @@ public class Map {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
-		
+
 		goldMap = new int[this.height][this.width];
 		woodMap = new int[this.height][this.width];
-		
-		for(int y = 0; y<this.height; y++) {
-			for(int x = 0; x<this.width; x++) {
-				switch(passableMap[y][x]) {
+
+		for (int y = 0; y < this.height; y++) {
+			for (int x = 0; x < this.width; x++) {
+				switch (passableMap[y][x]) {
 				case RED_CASTLE:
 					initialCastleLocations.add(new InitialCastle(Team.RED, x, y));
 					passableMap[y][x] = Tile.PASSABLE;
@@ -139,5 +145,10 @@ public class Map {
 	protected LinkedList<InitialCastle> getCastleLocations() {
 		return (LinkedList<InitialCastle>) initialCastleLocations.clone();
 
+	}
+
+	@Override
+	public String toString() {
+		return origMap;
 	}
 }
