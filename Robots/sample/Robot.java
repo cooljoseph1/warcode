@@ -15,8 +15,8 @@ public class Robot extends WCRobot {
 	// You must override the turn method in your bot.
 	@Override
 	public void turn() throws GameException {
+		//System.out.println("I am a " + me.unitType);
 		if (me.unitType == SPECS.Castle) {
-			System.out.println(getGold());
 			if (getGold() >= SPECS.Peasant.CONSTRUCTION_GOLD && getWood() >= SPECS.Peasant.CONSTRUCTION_WOOD) {
 				this.buildUnit(me.getX() + 1, me.getY() + 1, SPECS.Peasant);
 				System.out.println("Just built a peasant!");

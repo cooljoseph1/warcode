@@ -5,7 +5,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringJoiner;
 
@@ -26,7 +25,7 @@ public class Engine {
 	private int turn = 0;
 
 	private StringJoiner saveInfo = new StringJoiner("\n");
-	private StringJoiner turnOperations;
+	private StringJoiner turnActions;
 
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
@@ -48,10 +47,21 @@ public class Engine {
 		map = new Map(mapName);
 
 		// Add initial castle locations
+		turnActions = new StringJoiner(";");
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
 
-			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle);
+			int unitId = makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle, false);
+			addAction(
+					new BuildAction(unitId, castleInfo.getTeam(), SPECS.Castle, castleInfo.getX(), castleInfo.getY()));
 		}
+		saveInfo.add(turnActions.toString());
+
+		// Set initial resources
+		redGold = SPECS.INITIAL_GOLD;
+		redWood = SPECS.INITIAL_WOOD;
+
+		blueGold = SPECS.INITIAL_GOLD;
+		blueWood = SPECS.INITIAL_WOOD;
 
 		// Run game until one wins or turn reaches 1000.
 		boolean redWon = false;
@@ -60,13 +70,12 @@ public class Engine {
 
 		while (!redWon && !blueWon && turn < 1000) {
 			// string joiner of the operations that occurred in the turn.
-			turnOperations = new StringJoiner(";");
+			turnActions = new StringJoiner("; ");
 
 			redWon = true;
 			blueWon = true;
 
-			for (Iterator<Integer> ids = idQueue.iterator(); ids.hasNext();) {
-				Integer id = ids.next();
+			for (int id : new LinkedList<Integer>(idQueue)) {
 				WCRobot robot = getRobot(id);
 				if (robot.me.team == Team.RED) {
 					blueWon = false;
@@ -79,7 +88,7 @@ public class Engine {
 
 			turn++;
 			// Add turn's operations to save info, so it can be saved
-			saveInfo.add(turnOperations.toString());
+			saveInfo.add(turnActions.toString());
 		}
 
 		if (redWon) {
@@ -109,9 +118,9 @@ public class Engine {
 			throw new RuntimeException(ex);
 		}
 	}
-	
-	protected void addOperation(Operation operation) {
-		turnOperations.add(operation.toString());
+
+	protected void addAction(Action operation) {
+		turnActions.add(operation.toString());
 	}
 
 	protected Tile[][] getPassableMap() {
@@ -268,6 +277,7 @@ public class Engine {
 		}
 		removeAllRobots(idsToRemove);
 	}
+
 	/**
 	 * 
 	 * @param x
@@ -277,21 +287,27 @@ public class Engine {
 	 * @return id of new unit
 	 */
 	protected int makeRobot(int x, int y, Team team, UnitType unitType) {
+		return makeRobot(x, y, team, unitType, true);
+	}
+
+	protected int makeRobot(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
 		int id;
 		do {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
 		} while (idRobotMap.containsKey(id));
 		Unit unit = new Unit(id, unitType, team, x, y);
 		addRobot(unit, team);
-		if (team == Team.RED) {
-			redGold -= unitType.CONSTRUCTION_GOLD;
-			redWood -= unitType.CONSTRUCTION_WOOD;
-		} else {
-			blueGold -= unitType.CONSTRUCTION_GOLD;
-			blueWood -= unitType.CONSTRUCTION_WOOD;
+		if (subtractResources) {
+			if (team == Team.RED) {
+				redGold -= unitType.CONSTRUCTION_GOLD;
+				redWood -= unitType.CONSTRUCTION_WOOD;
+			} else {
+				blueGold -= unitType.CONSTRUCTION_GOLD;
+				blueWood -= unitType.CONSTRUCTION_WOOD;
+			}
 		}
-		
 		return id;
+
 	}
 
 	protected Unit getUnit(int id) {
@@ -382,7 +398,27 @@ public class Engine {
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+
+		Runtime.getRuntime().addShutdownHook(new ShutdownHook(engine, args[3]));
 		System.out.println(engine.playGame(args[2]));
-		engine.save(args[3]);
+		// engine.save(args[3]);
+	}
+}
+
+class ShutdownHook extends Thread {
+	private String saveFile;
+	private Engine engine;
+
+	public ShutdownHook(Engine engine, String saveFile) {
+		super();
+
+		this.engine = engine;
+		this.saveFile = saveFile;
+	}
+
+	public void run() {
+		System.out.println("Saving...");
+		engine.save(saveFile);
+		System.out.println("Saved game nicely.");
 	}
 }

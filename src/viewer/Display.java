@@ -18,7 +18,7 @@ import java.util.Arrays;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import warcode.Operation;
+import warcode.Action;
 import warcode.Tile;
 import warcode.Unit;
 
@@ -39,8 +39,8 @@ public class Display extends JPanel {
 
 	private Tile[][] tileMap;
 	private Unit[] units;
-	private Operation[] operations;
-	private Operation[][] turns;
+	private Action[] operations;
+	private Action[][] turns;
 	private int gameLength = 0;
 	private int operationLength = 0;
 	private int currentTurn;
@@ -148,7 +148,7 @@ public class Display extends JPanel {
 			
 			//Important:  gameLength must be the first line of the save file.
 			gameLength = Integer.parseInt(reader.readLine());
-			turns = new Operation[gameLength][];
+			turns = new Action[gameLength][];
 			
 			//Important:  the next two lines must be mapWidth and mapHeight respectively.
 			mapWidth = Integer.parseInt(reader.readLine());
@@ -165,9 +165,9 @@ public class Display extends JPanel {
 			for(int i = 0; i<gameLength; i++) {
 				String line = reader.readLine();
 				String[] opers = line.split(";");
-				Operation[] turnOpers = new Operation[opers.length];
+				Action[] turnOpers = new Action[opers.length];
 				for(int j = 0; j<opers.length; j++) {
-					turnOpers[j] = new Operation(opers[j]);
+					turnOpers[j] = new Action(opers[j]);
 				}
 				turns[i] = turnOpers;
 			}
