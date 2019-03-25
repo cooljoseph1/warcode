@@ -21,7 +21,7 @@ public class Map {
 	public Map(String mapName) {
 		try {
 			origMap = new String(Files.readAllBytes(Paths.get("Resources/Maps/" + mapName + ".wcm")));
-			
+
 			int height = 0;
 			int width = 0;
 
@@ -76,6 +76,50 @@ public class Map {
 			}
 		}
 
+	}
+
+	public Map(String[] mapRows, int width, int height) {
+
+		origMap = String.join("\n", mapRows);
+
+		this.width = width;
+		this.height = height;
+
+		passableMap = new Tile[height][width];
+
+		int y = 0;
+		for (String line : mapRows) {
+			for (int x = 0; x < line.length(); x++) {
+				passableMap[y][x] = Tile.fromChar(line.charAt(x));
+			}
+			y++;
+		}
+
+		goldMap = new int[this.height][this.width];
+		woodMap = new int[this.height][this.width];
+
+		for (y = 0; y < this.height; y++) {
+			for (int x = 0; x < this.width; x++) {
+				switch (passableMap[y][x]) {
+				case RED_CASTLE:
+					initialCastleLocations.add(new InitialCastle(Team.RED, x, y));
+					passableMap[y][x] = Tile.PASSABLE;
+					break;
+				case BLUE_CASTLE:
+					initialCastleLocations.add(new InitialCastle(Team.BLUE, x, y));
+					passableMap[y][x] = Tile.PASSABLE;
+					break;
+				case GOLD:
+					goldMap[y][x] = SPECS.GOLD_MINE_AMOUNT;
+					break;
+				case WOOD:
+					woodMap[y][x] = SPECS.TREE_AMOUNT;
+					break;
+				default:
+					break;
+				}
+			}
+		}
 	}
 
 	public int getWidth() {
@@ -142,7 +186,7 @@ public class Map {
 		return passableMap[y][x];
 	}
 
-	protected LinkedList<InitialCastle> getCastleLocations() {
+	public LinkedList<InitialCastle> getCastleLocations() {
 		return (LinkedList<InitialCastle>) initialCastleLocations.clone();
 
 	}

@@ -18,7 +18,7 @@ import java.util.Arrays;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import warcode.Action;
+import actions.Action;
 import warcode.Tile;
 import warcode.Unit;
 
@@ -39,10 +39,10 @@ public class Display extends JPanel {
 
 	private Tile[][] tileMap;
 	private Unit[] units;
-	private Action[] operations;
+	private Action[] actions;
 	private Action[][] turns;
 	private int gameLength = 0;
-	private int operationLength = 0;
+	private int actionLength = 0;
 	private int currentTurn;
 
 	public Display(int width, int height) {
@@ -167,7 +167,7 @@ public class Display extends JPanel {
 				String[] opers = line.split(";");
 				Action[] turnOpers = new Action[opers.length];
 				for(int j = 0; j<opers.length; j++) {
-					turnOpers[j] = new Action(opers[j]);
+					turnOpers[j] = Action.fromString(opers[j]);
 				}
 				turns[i] = turnOpers;
 			}

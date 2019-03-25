@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.StringJoiner;
 
+import actions.Action;
+import actions.BuildAction;
+
 public class Engine {
 	public final Constructor<WCRobot> redConstructor;
 	public final Constructor<WCRobot> blueConstructor;
@@ -47,7 +50,7 @@ public class Engine {
 		map = new Map(mapName);
 
 		// Add initial castle locations
-		turnActions = new StringJoiner(";");
+		turnActions = new StringJoiner("; ");
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
 
 			int unitId = makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle, false);

@@ -1,4 +1,4 @@
-package warcode;
+package exceptions;
 
 public class MineException extends GameException {
 

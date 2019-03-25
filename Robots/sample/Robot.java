@@ -1,7 +1,7 @@
 package sample;
 
+import exceptions.GameException;
 import warcode.Engine;
-import warcode.GameException;
 import warcode.SPECS;
 import warcode.Unit;
 import warcode.WCRobot;
