@@ -3,63 +3,71 @@ package viewer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
 import actions.Action;
-import warcode.Engine;
-import warcode.Map;
+import actions.AttackAction;
+import actions.BuildAction;
+import actions.CollectAction;
+import actions.DieAction;
+import actions.GiveAction;
+import actions.MineAction;
+import actions.MoveAction;
+import actions.SignalAction;
 import warcode.SPECS;
 import warcode.Team;
-import warcode.Tile;
-import warcode.Unit;
 import warcode.UnitType;
-import warcode.WCRobot;
 import warcode.Winner;
 
 public class ViewerEngine {
-	
+
 	private String saveFile;
 	private LinkedList<Action>[] turnActions;
 	private int turns;
-	
-	private Map map;
 
-	private LinkedList<Integer> idQueue = new LinkedList<Integer>();
-	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
-	private LinkedList<Unit> castles = new LinkedList<Unit>();
+	private ViewerMap map;
+
+	// aliveIdQueue stores the list of all alive units
+	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
+
+	// idUnitMap maps the ids to all the units ever made
+	private HashMap<Integer, ViewerUnit> idUnitMap = new HashMap<Integer, ViewerUnit>();
+	private LinkedList<ViewerUnit> castles = new LinkedList<ViewerUnit>();
 
 	private int redGold;
 	private int redWood;
 	private int blueGold;
 	private int blueWood;
-	
+
 	private int turn = 0;
 
 	public ViewerEngine(String saveFile) {
 		this.saveFile = saveFile;
-		
+
 		try {
-			
-			BufferedReader reader = new BufferedReader(new FileReader("Replays/" + saveFile + ".wcm"));
+
+			BufferedReader reader = new BufferedReader(new FileReader("Replays/" + saveFile + ".wcr"));
 			turns = Integer.parseInt(reader.readLine());
 			int width = Integer.parseInt(reader.readLine());
 			int height = Integer.parseInt(reader.readLine());
-			
+
 			String[] mapRows = new String[height];
-			for(int i = 0; i < height; i++) {
+			for (int i = 0; i < height; i++) {
 				mapRows[i] = reader.readLine();
 			}
-			
-			map = new Map(mapRows, width, height);
-			
+
+			map = new ViewerMap(mapRows, width, height);
+
 			int turn = 0;
+			turnActions = new LinkedList[turns];
 			for (String line = reader.readLine(); line != null; line = reader.readLine(), turn++) {
 				turnActions[turn] = new LinkedList<Action>();
 				for (String action : line.split("; ")) {
-					turnActions[turn].add(Action.fromString(action));
+					if (!"".equals(action)) {
+						turnActions[turn].add(Action.fromString(action));
+					}
 				}
 			}
 			reader.close();
@@ -67,22 +75,86 @@ public class ViewerEngine {
 			throw new RuntimeException(ex);
 		}
 	}
-	
+
 	public void moveForwardTurn() {
-		
+
 		for (Action action : turnActions[turn]) {
-			switch(action.actionType) {
-			
+			switch (action.actionType) {
+			case ATTACK:
+				doAttackAction((AttackAction) action);
+				break;
+			case BUILD:
+				doBuildAction((BuildAction) action);
+				break;
+			case COLLECT:
+				doCollectAction((CollectAction) action);
+				break;
+			case DIE:
+				doDieAction((DieAction) action);
+				break;
+			case GIVE:
+				doGiveAction((GiveAction) action);
+				break;
+			case MINE:
+				doMineAction((MineAction) action);
+				break;
+			case MOVE:
+				doMoveAction((MoveAction) action);
+				break;
+			case SIGNAL:
+				doSignalAction((SignalAction) action);
+				break;
+			default:
+				break;
 			}
-			
+
 		}
-		
+
 		turn++;
+	}
+
+	public void doAttackAction(AttackAction attackAction) {
+		attack(attackAction.x, attackAction.y, getUnit(attackAction.id).getUnitType());
+	}
+
+	public void doBuildAction(BuildAction buildAction) {
+		makeUnit(buildAction.x, buildAction.y, buildAction.team, buildAction.unitType);
+	}
+
+	public void doCollectAction(CollectAction collectAction) {
+		ViewerUnit unit = getUnit(collectAction.id);
+		unit.addWood(SPECS.COLLECT_AMOUNT);
+		decreaseWood(collectAction.x, collectAction.y, SPECS.COLLECT_AMOUNT);
+	}
+
+	public void doDieAction(DieAction dieAction) {
+		aliveIdQueue.remove(dieAction.id);
+	}
+
+	public void doGiveAction(GiveAction giveAction) {
+		ViewerUnit unit = getUnit(giveAction.id);
+		unit.decreaseWood(giveAction.wood);
+		unit.decreaseGold(giveAction.gold);
+		giveResources(giveAction.x, giveAction.y, giveAction.wood, giveAction.gold);
+	}
+
+	public void doMineAction(MineAction mineAction) {
+		ViewerUnit unit = getUnit(mineAction.id);
+		unit.addGold(SPECS.MINE_AMOUNT);
+		decreaseWood(unit.getX(), unit.getY(), SPECS.MINE_AMOUNT);
+	}
+
+	public void doMoveAction(MoveAction moveAction) {
+		getUnit(moveAction.id).setPos(moveAction.x, moveAction.y);
+	}
+
+	public void doSignalAction(SignalAction signalAction) {
+		getUnit(signalAction.id).setSignal(signalAction.signal);
 	}
 
 	public Winner playGame(String mapName) {
 
-		map = new Map(mapName);
+		map = new ViewerMap(mapName);
 
 		// Set initial resources
 		redGold = SPECS.INITIAL_GOLD;
@@ -96,26 +168,6 @@ public class ViewerEngine {
 		boolean blueWon = false;
 		turn = 0;
 
-		/*while (!redWon && !blueWon && turn < 1000) {
-			// string joiner of the operations that occurred in the turn.
-
-			redWon = true;
-			blueWon = true;
-
-			for (int id : new LinkedList<Integer>(idQueue)) {
-				WCRobot robot = getRobot(id);
-				if (robot.me.team == Team.RED) {
-					blueWon = false;
-				} else {
-					redWon = false;
-				}
-
-				robot._do_turn();
-			}
-
-			turn++;
-		}*/
-
 		if (redWon) {
 			return Winner.RED;
 		} else if (blueWon) {
@@ -127,108 +179,14 @@ public class ViewerEngine {
 
 	/**
 	 * 
-	 * @param fileLocation
-	 */
-	
-	/*public void open(String fileName) {
-		try {
-			FileWriter writer = new FileWriter("Replays/" + fileName + ".wcr");
-			// save turn, with, height, and then all of the operations
-			writer.write(turn + "\n");
-			writer.write(map.getWidth() + "\n");
-			writer.write(map.getHeight() + "\n");
-			writer.write(map.toString() + "\n");
-			writer.write(saveInfo.toString());
-			writer.close();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}*/
-
-	protected Tile[][] getPassableMap() {
-		return map.getPassableMapCopy();
-	}
-
-	protected int[][] getGoldMap() {
-		return map.getGoldMapCopy();
-	}
-
-	protected int[][] getWoodMap() {
-		return map.getWoodMapCopy();
-	}
-
-	protected int[][] getVisibleUnitMap(Unit unit) {
-		int[][] visibleUnitMap = new int[map.height][map.width];
-
-		for (int id : idQueue) {
-			Unit tempUnit = getUnit(id);
-			visibleUnitMap[tempUnit.getY()][tempUnit.getX()] = tempUnit.id;
-		}
-
-		for (int y = 0; y < map.height; y++) {
-			for (int x = 0; x < map.width; x++) {
-				// set values outside vision radius to -1
-				if (distanceSquared(x, y, unit.getX(), unit.getY()) > unit.unitType.VISION_RADIUS) {
-					visibleUnitMap[y][x] = -1;
-				}
-			}
-		}
-
-		return visibleUnitMap;
-	}
-
-	protected Unit[] getVisibleUnits(Unit unit) {
-		LinkedList<Unit> units = new LinkedList<Unit>();
-		for (int id : idQueue) {
-			Unit tempUnit = getUnit(id);
-			if (distanceSquared(tempUnit.getX(), tempUnit.getY(), unit.getX(),
-					unit.getY()) <= unit.unitType.VISION_RADIUS) {
-				units.add(tempUnit);
-			}
-		}
-
-		return units.toArray(new Unit[units.size()]);
-	}
-
-	protected boolean isOpen(int x, int y) {
-		if (!map.isOpen(x, y)) {
-			return false;
-		}
-		for (WCRobot robot : idRobotMap.values()) {
-			if (x == robot.me.getX() && y == robot.me.getY()) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	protected boolean isOnMine(int x, int y) {
-		return (map.get(x, y) == Tile.GOLD);
-	}
-
-	protected boolean isOnTree(int x, int y) {
-		return (map.get(x, y) == Tile.WOOD);
-	}
-
-	protected boolean isOnCastle(int x, int y) {
-		for (Unit castle : castles) {
-			if (castle.getX() == x && castle.getY() == y) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * 
 	 * @param x
 	 * @param y
 	 * @param gold
 	 * @param wood
 	 */
-	protected void giveResources(int x, int y, int gold, int wood) {
-		Unit castleAtLocation = null;
-		for (Unit castle : castles) {
+	protected void giveResources(int x, int y, int wood, int gold) {
+		ViewerUnit castleAtLocation = null;
+		for (ViewerUnit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
 				castleAtLocation = castle;
 				break;
@@ -288,16 +246,16 @@ public class ViewerEngine {
 
 	protected void attack(int x, int y, UnitType unitType) {
 		LinkedList<Integer> idsToRemove = new LinkedList<Integer>();
-		for (int id : idQueue) {
-			WCRobot robot = getRobot(id);
-			if (distanceSquared(robot.me.getX(), robot.me.getY(), x, y) <= unitType.SPLASH_RADIUS) {
-				robot.me.hurtUnit(unitType.ATTACK_DAMAGE);
-				if (robot.me.getHealth() <= 0) {
-					idsToRemove.add(robot.me.id);
+		for (int id : aliveIdQueue) {
+			ViewerUnit viewerUnit = getUnit(id);
+			if (distanceSquared(viewerUnit.getX(), viewerUnit.getY(), x, y) <= unitType.SPLASH_RADIUS) {
+				viewerUnit.hurtUnit(unitType.ATTACK_DAMAGE);
+				if (viewerUnit.getHealth() <= 0) {
+					idsToRemove.add(viewerUnit.id);
 				}
 			}
 		}
-		removeAllRobots(idsToRemove);
+		removeAllUnits(idsToRemove);
 	}
 
 	/**
@@ -308,17 +266,17 @@ public class ViewerEngine {
 	 * @param unitType
 	 * @return id of new unit
 	 */
-	protected int makeRobot(int x, int y, Team team, UnitType unitType) {
-		return makeRobot(x, y, team, unitType, true);
+	protected int makeUnit(int x, int y, Team team, UnitType unitType) {
+		return makeUnit(x, y, team, unitType, true);
 	}
 
-	protected int makeRobot(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
+	protected int makeUnit(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
 		int id;
 		do {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
-		} while (idRobotMap.containsKey(id));
-		Unit unit = new Unit(id, unitType, team, x, y);
-		addRobot(unit, team);
+		} while (idUnitMap.containsKey(id));
+		ViewerUnit viewerUnit = new ViewerUnit(id, unitType, team, x, y);
+		addUnit(viewerUnit, team);
 		if (subtractResources) {
 			if (team == Team.RED) {
 				redGold -= unitType.CONSTRUCTION_GOLD;
@@ -332,61 +290,34 @@ public class ViewerEngine {
 
 	}
 
-	protected Unit getUnit(int id) {
-		return idRobotMap.get(id).me;
+	protected ViewerUnit getUnit(int id) {
+		return idUnitMap.get(id);
 	}
 
-	private WCRobot getRobot(int id) {
-		return idRobotMap.get(id);
+	private void addUnit(ViewerUnit viewerUnit, Team team) {
+		// add robot to the id-robot hashmap
+		idUnitMap.put(viewerUnit.id, viewerUnit);
 	}
 
-	private void addRobot(Unit unit, Team team) {
-		WCRobot robot = null;
-		try {
-			long startTime = System.nanoTime();
-			if (team == Team.RED) {
-				robot = redConstructor.newInstance(unit, this);
-			} else {
-				robot = blueConstructor.newInstance(unit, this);
-			}
-			robot.subtractTime(System.nanoTime() - startTime);
-
-		} catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-			if (team == Team.RED) {
-				System.out.println("Red robot failed to initialize");
-			} else {
-				System.out.println("Blue robot failed to initialize");
-			}
-		} finally {
-			// add robot to the id-robot hashmap
-			idRobotMap.put(robot.me.id, robot);
-			// add id to the beginning of the robot queue.
-			idQueue.addFirst(robot.me.id);
-			if (robot.me.unitType == SPECS.Castle) {
-				castles.add(robot.me);
-			}
-		}
-	}
-
-	private void removeRobot(int id) {
+	private void removeUnit(int id) {
 		// if it is a castle, remove it from castles
-		Unit unit = getUnit(id);
-		if (unit.unitType == SPECS.Castle) {
-			castles.remove(unit);
+		ViewerUnit viewerUnit = getUnit(id);
+		if (viewerUnit.unitType == SPECS.Castle) {
+			castles.remove(viewerUnit);
 		}
 		// remove from hashmap
-		idRobotMap.remove(id);
+		idUnitMap.remove(id);
 		// remove from turn queue
-		idQueue.remove(Integer.valueOf(id));
+		aliveIdQueue.remove(Integer.valueOf(id));
 	}
 
-	private void removeAllRobots(Collection<Integer> ids) {
+	private void removeAllUnits(Collection<Integer> ids) {
 		for (int id : ids) {
-			removeRobot(id);
+			removeUnit(id);
 		}
 	}
 
-	protected final static int distanceSquared(Unit unit1, Unit unit2) {
+	protected final static int distanceSquared(ViewerUnit unit1, ViewerUnit unit2) {
 		int dx = unit1.getX() - unit2.getX();
 		int dy = unit1.getY() - unit2.getY();
 		return dx * dx + dy * dy;
@@ -399,48 +330,6 @@ public class ViewerEngine {
 	}
 
 	public static void main(String[] args) {
-		ClassLoader classLoader = Engine.class.getClassLoader();
-
-		Class<WCRobot> red;
-		try {
-			red = (Class<WCRobot>) classLoader.loadClass(args[0]);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-
-		Class<WCRobot> blue;
-		try {
-			blue = (Class<WCRobot>) classLoader.loadClass(args[1]);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-		Engine engine;
-		try {
-			engine = new Engine(red, blue);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
-
-		Runtime.getRuntime().addShutdownHook(new ShutdownHook(engine, args[3]));
-		System.out.println(engine.playGame(args[2]));
-		// engine.save(args[3]);
-	}
-}
-
-class ShutdownHook extends Thread {
-	private String saveFile;
-	private Engine engine;
-
-	public ShutdownHook(Engine engine, String saveFile) {
-		super();
-
-		this.engine = engine;
-		this.saveFile = saveFile;
-	}
-
-	public void run() {
-		System.out.println("Saving...");
-		engine.save(saveFile);
-		System.out.println("Saved game nicely.");
+		ViewerEngine engine = new ViewerEngine(args[0]);
 	}
 }

@@ -178,8 +178,8 @@ public abstract class WCRobot {
 		} else if (engine.isOnTree(x, y)) {
 			engine.addAction(new CollectAction(me.getId(), x, y));
 
-			this.me.addWood(SPECS.WOOD_AMOUNT);
-			engine.decreaseWood(x, y, SPECS.WOOD_AMOUNT);
+			this.me.addWood(SPECS.COLLECT_AMOUNT);
+			engine.decreaseWood(x, y, SPECS.COLLECT_AMOUNT);
 			gathered = true;
 		} else {
 			throw new CollectException(String.format("%d %d does not contain any wood", x, y));
@@ -202,12 +202,12 @@ public abstract class WCRobot {
 		} else if (!engine.isOnCastle(x, y)) {
 			throw new GiveException("Peasant can only give resources to a castle");
 		} else {
-			engine.addAction(new GiveAction(me.getId(), x, y));
+			engine.addAction(new GiveAction(me.getId(), x, y, wood, gold));
 
 			me.decreaseWood(wood);
 			me.decreaseGold(gold);
 
-			engine.giveResources(x, y, gold, wood);
+			engine.giveResources(x, y, wood, gold);
 			given = true;
 		}
 
@@ -243,7 +243,9 @@ public abstract class WCRobot {
 			throw new BuildException("Not enough wood to build unit");
 		} else {
 			int id = engine.makeRobot(x, y, me.team, unitType);
-			engine.addAction(new BuildAction(id, me.getTeam(), unitType, x, y));
+			
+			//Do not need to add an action because the engine automatically does that
+			//engine.addAction(new BuildAction(id, me.getTeam(), unitType, x, y));
 			built = true;
 		}
 

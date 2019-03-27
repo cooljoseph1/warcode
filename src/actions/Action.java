@@ -4,15 +4,16 @@ import java.util.Arrays;
 
 public abstract class Action {
 	public final ActionType actionType;
-	
+
 	public Action(ActionType actionType) {
 		this.actionType = actionType;
 	}
-	
+
 	public static Action fromString(String string) {
 		String[] parts = string.split(", ");
 
 		String[] infoParts = Arrays.copyOfRange(parts, 1, parts.length);
+
 		switch (ActionType.fromString(parts[0])) {
 		case ATTACK:
 			return new AttackAction(infoParts);

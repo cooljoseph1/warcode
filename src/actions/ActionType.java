@@ -1,7 +1,7 @@
 package actions;
 
 public enum ActionType {
-	ATTACK, BUILD, COLLECT, GIVE, MINE, MOVE, SIGNAL;
+	ATTACK, BUILD, COLLECT, GIVE, MINE, MOVE, SIGNAL, DIE;
 
 	@Override
 	public String toString() {
@@ -20,6 +20,8 @@ public enum ActionType {
 			return "MOVE";
 		case SIGNAL:
 			return "SIGNAL";
+		case DIE:
+			return "DIE";
 		default:
 			throw new IllegalArgumentException("Invalid enum type for ActionType");
 		}
@@ -41,6 +43,8 @@ public enum ActionType {
 			return MOVE;
 		case "SIGNAL":
 			return SIGNAL;
+		case "DIE":
+			return DIE;
 		default:
 			throw new IllegalArgumentException("Invalid name for ActionType");
 

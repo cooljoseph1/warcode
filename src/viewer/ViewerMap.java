@@ -1,4 +1,4 @@
-package warcode;
+package viewer;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +8,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-public class Map {
+import warcode.InitialCastle;
+import warcode.SPECS;
+import warcode.Team;
+import warcode.Tile;
+
+public class ViewerMap {
 	private Tile[][] passableMap;
 	private int[][] goldMap;
 	private int[][] woodMap;
@@ -18,7 +23,7 @@ public class Map {
 	public final int width;
 	public final int height;
 
-	public Map(String mapName) {
+	public ViewerMap(String mapName) {
 		try {
 			origMap = new String(Files.readAllBytes(Paths.get("Resources/Maps/" + mapName + ".wcm")));
 
@@ -78,7 +83,7 @@ public class Map {
 
 	}
 
-	public Map(String[] mapRows, int width, int height) {
+	public ViewerMap(String[] mapRows, int width, int height) {
 
 		origMap = String.join("\n", mapRows);
 

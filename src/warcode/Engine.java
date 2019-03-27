@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import actions.Action;
 import actions.BuildAction;
+import actions.DieAction;
 
 public class Engine {
 	public final Constructor<WCRobot> redConstructor;
@@ -17,7 +18,9 @@ public class Engine {
 
 	private Map map;
 
-	private LinkedList<Integer> idQueue = new LinkedList<Integer>();
+	// stores a list of all alive units, in order of the turn queue
+	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
+	// maps the ids to all robots every created
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
 	private LinkedList<Unit> castles = new LinkedList<Unit>();
 
@@ -54,8 +57,6 @@ public class Engine {
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
 
 			int unitId = makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle, false);
-			addAction(
-					new BuildAction(unitId, castleInfo.getTeam(), SPECS.Castle, castleInfo.getX(), castleInfo.getY()));
 		}
 		saveInfo.add(turnActions.toString());
 
@@ -78,7 +79,7 @@ public class Engine {
 			redWon = true;
 			blueWon = true;
 
-			for (int id : new LinkedList<Integer>(idQueue)) {
+			for (int id : new LinkedList<Integer>(aliveIdQueue)) {
 				WCRobot robot = getRobot(id);
 				if (robot.me.team == Team.RED) {
 					blueWon = false;
@@ -141,7 +142,7 @@ public class Engine {
 	protected int[][] getVisibleUnitMap(Unit unit) {
 		int[][] visibleUnitMap = new int[map.height][map.width];
 
-		for (int id : idQueue) {
+		for (int id : aliveIdQueue) {
 			Unit tempUnit = getUnit(id);
 			visibleUnitMap[tempUnit.getY()][tempUnit.getX()] = tempUnit.id;
 		}
@@ -160,7 +161,7 @@ public class Engine {
 
 	protected Unit[] getVisibleUnits(Unit unit) {
 		LinkedList<Unit> units = new LinkedList<Unit>();
-		for (int id : idQueue) {
+		for (int id : aliveIdQueue) {
 			Unit tempUnit = getUnit(id);
 			if (distanceSquared(tempUnit.getX(), tempUnit.getY(), unit.getX(),
 					unit.getY()) <= unit.unitType.VISION_RADIUS) {
@@ -207,7 +208,7 @@ public class Engine {
 	 * @param gold
 	 * @param wood
 	 */
-	protected void giveResources(int x, int y, int gold, int wood) {
+	protected void giveResources(int x, int y, int wood, int gold) {
 		Unit castleAtLocation = null;
 		for (Unit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
@@ -269,7 +270,7 @@ public class Engine {
 
 	protected void attack(int x, int y, UnitType unitType) {
 		LinkedList<Integer> idsToRemove = new LinkedList<Integer>();
-		for (int id : idQueue) {
+		for (int id : aliveIdQueue) {
 			WCRobot robot = getRobot(id);
 			if (distanceSquared(robot.me.getX(), robot.me.getY(), x, y) <= unitType.SPLASH_RADIUS) {
 				robot.me.hurtUnit(unitType.ATTACK_DAMAGE);
@@ -309,6 +310,9 @@ public class Engine {
 				blueWood -= unitType.CONSTRUCTION_WOOD;
 			}
 		}
+
+		addAction(new BuildAction(unit.getId(), unit.getTeam(), unit.unitType, unit.getX(), unit.getY()));
+
 		return id;
 
 	}
@@ -342,7 +346,7 @@ public class Engine {
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
 			// add id to the beginning of the robot queue.
-			idQueue.addFirst(robot.me.id);
+			aliveIdQueue.addFirst(robot.me.id);
 			if (robot.me.unitType == SPECS.Castle) {
 				castles.add(robot.me);
 			}
@@ -352,13 +356,16 @@ public class Engine {
 	private void removeRobot(int id) {
 		// if it is a castle, remove it from castles
 		Unit unit = getUnit(id);
+
+		addAction(new DieAction(unit.getId(), unit.getTeam(), unit.unitType, unit.getX(), unit.getY()));
+
 		if (unit.unitType == SPECS.Castle) {
 			castles.remove(unit);
 		}
 		// remove from hashmap
 		idRobotMap.remove(id);
 		// remove from turn queue
-		idQueue.remove(Integer.valueOf(id));
+		aliveIdQueue.remove(Integer.valueOf(id));
 	}
 
 	private void removeAllRobots(Collection<Integer> ids) {
