@@ -143,6 +143,11 @@ public class ViewerMap {
 		return copy;
 	}
 
+	// Dangerous: will return the actual tile map!
+	public Tile[][] getPassableMap() {
+		return passableMap;
+	}
+
 	public int[][] getGoldMapCopy() {
 		int[][] copy = new int[goldMap.length][goldMap[0].length];
 		for (int i = 0; i < goldMap.length; i++) {

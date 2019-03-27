@@ -43,12 +43,15 @@ public class ViewerEngine {
 
 	private int turn = 0;
 
+	private Winner winner;
+
 	public ViewerEngine(String saveFile) {
 		this.saveFile = saveFile;
 
 		try {
 
 			BufferedReader reader = new BufferedReader(new FileReader("Replays/" + saveFile + ".wcr"));
+			winner = Winner.fromString(reader.readLine());
 			turns = Integer.parseInt(reader.readLine());
 			int width = Integer.parseInt(reader.readLine());
 			int height = Integer.parseInt(reader.readLine());
@@ -74,6 +77,14 @@ public class ViewerEngine {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
+	}
+
+	public Winner getWinner() {
+		return winner;
+	}
+
+	public boolean hasNextTurn() {
+		return turn < turns;
 	}
 
 	public void moveForwardTurn() {
@@ -316,6 +327,10 @@ public class ViewerEngine {
 			removeUnit(id);
 		}
 	}
+	
+	public ViewerMap getMap() {
+		return map;
+	}
 
 	protected final static int distanceSquared(ViewerUnit unit1, ViewerUnit unit2) {
 		int dx = unit1.getX() - unit2.getX();
@@ -331,5 +346,10 @@ public class ViewerEngine {
 
 	public static void main(String[] args) {
 		ViewerEngine engine = new ViewerEngine(args[0]);
+		while (engine.hasNextTurn()) {
+			engine.moveForwardTurn();
+		}
+
+		System.out.println(engine.getWinner());
 	}
 }

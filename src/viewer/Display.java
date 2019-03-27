@@ -38,12 +38,8 @@ public class Display extends JPanel {
 	private int left;
 
 	private Tile[][] tileMap;
-	private Unit[] units;
-	private Action[] actions;
-	private Action[][] turns;
-	private int gameLength = 0;
-	private int actionLength = 0;
-	private int currentTurn;
+
+	private ViewerEngine engine;
 
 	public Display(int width, int height) {
 		super();
@@ -59,24 +55,23 @@ public class Display extends JPanel {
 
 	}
 
-	public void reset() {
-		tileMap = new Tile[mapHeight][mapWidth];
-		// initialize tileMap to empty tiles
-		for (int y = 0; y < tileMap.length; y++) {
-			for (int x = 0; x < tileMap[0].length; x++) {
-				tileMap[y][x] = Tile.PASSABLE;
-			}
-		}
-		repaint();
-	}
-
 	@Override
 	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
 		displayWidth = getWidth();
 		displayHeight = getHeight();
 		setDefaultScale();
 
-		super.paintComponent(g);
+		if (tileMap != null) {
+			drawMap(g);
+		}
+		if (engine != null) {
+			drawUnits(g);
+		}
+	}
+
+	protected void drawMap(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
@@ -118,6 +113,10 @@ public class Display extends JPanel {
 		}
 	}
 
+	protected void drawUnits(Graphics g) {
+		
+	}
+
 	private void setDefaultScale() {
 		scaleSize = Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1;
 		top = (int) ((displayHeight - (scaleSize * mapHeight)) / 2);
@@ -140,44 +139,16 @@ public class Display extends JPanel {
 		return new int[] { (int) Math.floor((x - left) / scaleSize), (int) Math.floor((y - top) / scaleSize) };
 	}
 
-
 	public void openGame(String fileLocation) {
-		try {
-			
-			BufferedReader reader = new BufferedReader(new FileReader(fileLocation));
-			
-			//Important:  gameLength must be the first line of the save file.
-			gameLength = Integer.parseInt(reader.readLine());
-			turns = new Action[gameLength][];
-			
-			//Important:  the next two lines must be mapWidth and mapHeight respectively.
-			mapWidth = Integer.parseInt(reader.readLine());
-			mapHeight = Integer.parseInt(reader.readLine());
-			tileMap = new Tile[mapHeight][mapWidth];
-			for(int y = 0; y<mapHeight; y++) {
-				String row = reader.readLine();
-				for(int x = 0; x < mapWidth; x++) {
-					tileMap[y][x] = Tile.fromChar(row.charAt(x));
-				}
-			}
-			
-			
-			for(int i = 0; i<gameLength; i++) {
-				String line = reader.readLine();
-				String[] opers = line.split(";");
-				Action[] turnOpers = new Action[opers.length];
-				for(int j = 0; j<opers.length; j++) {
-					turnOpers[j] = Action.fromString(opers[j]);
-				}
-				turns[i] = turnOpers;
-			}
-			
-			reader.close();
+		engine = new ViewerEngine(fileLocation);
+		tileMap = engine.getMap().getPassableMap();
+		mapWidth = tileMap[0].length;
+		mapHeight = tileMap.length;
+	}
 
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		} finally {
-			repaint();
-		}
+	public static void main(String[] args) {
+		Display display = new Display(700, 500);
+		display.openGame(args[0]);
+		System.out.println(display.tileMap[10][20]);
 	}
 }

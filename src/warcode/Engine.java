@@ -33,6 +33,8 @@ public class Engine {
 	private StringJoiner saveInfo = new StringJoiner("\n");
 	private StringJoiner turnActions;
 
+	private Winner winner;
+
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
 			redConstructor = red.getConstructor(Unit.class, Engine.class);
@@ -96,12 +98,17 @@ public class Engine {
 		}
 
 		if (redWon) {
-			return Winner.RED;
+			winner = Winner.RED;
 		} else if (blueWon) {
-			return Winner.BLUE;
+			winner = Winner.BLUE;
 		} else {
-			return Winner.TIE;
+			winner = Winner.TIE;
 		}
+		return winner;
+	}
+	
+	public Winner getWinner() {
+		return winner;
 	}
 
 	/**
@@ -112,6 +119,7 @@ public class Engine {
 		try {
 			FileWriter writer = new FileWriter("Replays/" + fileName + ".wcr");
 			// save turn, with, height, and then all of the operations
+			writer.write(winner + "\n");
 			writer.write(turn + "\n");
 			writer.write(map.getWidth() + "\n");
 			writer.write(map.getHeight() + "\n");
