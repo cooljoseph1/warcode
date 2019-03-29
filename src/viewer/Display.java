@@ -40,8 +40,8 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	private double zoom = 1;
 	private double zoomX = 0;
 	private double zoomY = 0;
-	private int top;
-	private int left;
+	private double top;
+	private double left;
 
 	private Tile[][] tileMap;
 
@@ -183,10 +183,9 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	private void setDefaultScale() {
 		scaleSize = (Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1) * zoom;
-		top = (int) ((displayHeight - (scaleSize * mapHeight)) / 2 + zoomY * scaleSize);
-		left = (int) ((displayWidth - (scaleSize * mapWidth)) / 2 + zoomX * scaleSize);
+		top = ((displayHeight + zoomY * scaleSize - (scaleSize * mapHeight)) / 2);
+		left = ((displayWidth + zoomX * scaleSize - (scaleSize * mapWidth)) / 2);
 
-		redCastle = originalRedCastle.getScaledInstance((int) scaleSize, (int) scaleSize, BufferedImage.SCALE_DEFAULT);
 	}
 
 	private void fillRect(Graphics2D g2d, double x, double y, double width, double height) {
@@ -245,13 +244,17 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 		double centerX = getWidth() / 2d;
 		double centerY = getHeight() / 2d;
-		
+
 		double val = Math.exp(-e.getWheelRotation() / 10d);
-		
-		zoomX -= (e.getX() - left)/scaleSize/scaleSize*val;
-		zoomY -= (e.getY() - top)/scaleSize/scaleSize*val;
-		
+
+		zoomX += (centerX - e.getX()) / scaleSize * (val - 1) * 2;
+		zoomY += (centerY - e.getY()) / scaleSize * (val - 1) * 2;
+
 		zoom *= val;
+
+		setDefaultScale();
+		redCastle = originalRedCastle.getScaledInstance((int) scaleSize, (int) scaleSize, BufferedImage.SCALE_DEFAULT);
+		repaint();
 
 		repaint();
 
