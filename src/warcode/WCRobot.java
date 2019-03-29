@@ -261,7 +261,7 @@ public abstract class WCRobot {
 		if (signalled) {
 			throw new SignalException("Robot can only signal once per turn");
 		} else {
-			engine.addAction(new SignalAction(me.getId(), message));
+			engine.addAction(new SignalAction(me.getId(), message, me.getSignal().value));
 			this.me.setSignal(message);
 			signalled = true;
 		}

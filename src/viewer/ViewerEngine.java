@@ -199,7 +199,7 @@ public class ViewerEngine {
 	}
 
 	public void doSignalAction(SignalAction signalAction) {
-		getUnit(signalAction.id).setSignal(signalAction.signal);
+		getUnit(signalAction.id).setSignal(signalAction.oldSignal);
 	}
 
 	public void undoAttackAction(AttackAction attackAction) {

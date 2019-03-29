@@ -43,6 +43,9 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	private double top;
 	private double left;
 
+	private double centerX;
+	private double centerY;
+
 	private Tile[][] tileMap;
 
 	private ViewerEngine engine;
@@ -183,8 +186,12 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	private void setDefaultScale() {
 		scaleSize = (Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1) * zoom;
-		top = ((displayHeight + zoomY * scaleSize - (scaleSize * mapHeight)) / 2);
-		left = ((displayWidth + zoomX * scaleSize - (scaleSize * mapWidth)) / 2);
+
+		centerX = displayWidth / 2d;
+		centerY = displayHeight / 2d;
+
+		left = centerX + zoomX - (scaleSize * mapWidth) / 2;
+		top = centerY + zoomY - (scaleSize * mapHeight) / 2;
 
 	}
 
@@ -241,14 +248,11 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-
-		double centerX = getWidth() / 2d;
-		double centerY = getHeight() / 2d;
-
 		double val = Math.exp(-e.getWheelRotation() / 10d);
-
-		zoomX += (centerX - e.getX()) / scaleSize * (val - 1) * 2;
-		zoomY += (centerY - e.getY()) / scaleSize * (val - 1) * 2;
+		
+		//Magic - DO NOT TOUCH!
+		zoomX += (centerX + zoomX - e.getX()) * (val - 1);
+		zoomY += (centerY + zoomY - e.getY()) * (val - 1);
 
 		zoom *= val;
 
