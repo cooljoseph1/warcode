@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
@@ -22,7 +24,7 @@ import javax.swing.event.ChangeListener;
 
 import warcode.Tile;
 
-public class Display extends JPanel implements ChangeListener, MouseWheelListener {
+public class Display extends JPanel implements ChangeListener, MouseWheelListener, MouseMotionListener, MouseListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
 	private static final Color FOREST_GREEN = new Color(0, 153, 0);
@@ -45,6 +47,9 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	private double centerX;
 	private double centerY;
+
+	private int mouseStartX;
+	private int mouseStartY;
 
 	private Tile[][] tileMap;
 
@@ -73,8 +78,10 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		window.setPreferredSize(new Dimension(width, height));
 		window.setLayout(new BorderLayout());
 
-		// add in mouse listener
+		// add in mouse listeners
 		addMouseWheelListener(this);
+		addMouseMotionListener(this);
+		addMouseListener(this);
 
 		// setup and add the turn slider and label
 		topPanel.setLayout(new BorderLayout());
@@ -96,6 +103,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		window.pack();
 
 		grabFocus();
+		
 
 	}
 
@@ -105,9 +113,8 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 		Graphics2D g2d = (Graphics2D) g;
 
-		displayWidth = getWidth();
-		displayHeight = getHeight();
-		setDefaultScale();
+		// See if the window has changed size. If it has, resize images.
+		checkWindowSize();
 
 		if (tileMap != null) {
 			drawMap(g2d);
@@ -184,15 +191,43 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		}
 	}
 
+	private void checkWindowSize() {
+		setDefaultScale();
+		setPosition();
+		if (displayWidth != getWidth() || displayHeight != getHeight()) {
+
+			double oldScale = scaleSize;
+
+			displayWidth = getWidth();
+			displayHeight = getHeight();
+			setDefaultScale();
+
+			if (oldScale > 0) {
+				zoomX *= scaleSize / oldScale;
+				zoomY *= scaleSize / oldScale;
+			}
+
+			scaleImages();
+			setPosition();
+		}
+	}
+
 	private void setDefaultScale() {
 		scaleSize = (Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1) * zoom;
 
+	}
+
+	private void setPosition() {
 		centerX = displayWidth / 2d;
 		centerY = displayHeight / 2d;
 
 		left = centerX + zoomX - (scaleSize * mapWidth) / 2;
 		top = centerY + zoomY - (scaleSize * mapHeight) / 2;
+	}
 
+	private void scaleImages() {
+		redCastle = originalRedCastle.getScaledInstance((int) scaleSize + 1, (int) scaleSize + 1,
+				BufferedImage.SCALE_FAST);
 	}
 
 	private void fillRect(Graphics2D g2d, double x, double y, double width, double height) {
@@ -249,18 +284,73 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		double val = Math.exp(-e.getWheelRotation() / 10d);
-		
-		//Magic - DO NOT TOUCH!
+
+		if (val * scaleSize > 1000) {
+			val = 1000 / scaleSize;
+		}
+
+		if (val * scaleSize < 2) {
+			val = 2 / scaleSize;
+		}
+
+		// Magic - DO NOT TOUCH!
 		zoomX += (centerX + zoomX - e.getX()) * (val - 1);
 		zoomY += (centerY + zoomY - e.getY()) * (val - 1);
 
 		zoom *= val;
 
 		setDefaultScale();
-		redCastle = originalRedCastle.getScaledInstance((int) scaleSize, (int) scaleSize, BufferedImage.SCALE_DEFAULT);
-		repaint();
+		scaleImages();
 
 		repaint();
+
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		zoomX += e.getX() - mouseStartX;
+		zoomY += e.getY() - mouseStartY;
+
+		mouseStartX = e.getX();
+		mouseStartY = e.getY();
+		repaint();
+
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		mouseStartX = e.getX();
+		mouseStartY = e.getY();
+
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
 
 	}
 }
