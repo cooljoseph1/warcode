@@ -11,6 +11,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import warcode.Team;
 import warcode.Tile;
 
 public class Display extends JPanel implements ChangeListener, MouseWheelListener, MouseMotionListener, MouseListener {
@@ -56,18 +59,19 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	private ViewerEngine engine;
 
 	// robot images
-	private static final Image originalRedCastle;
-	static {
-		Image tmpRedCastle = null;
+	private static final BufferedImage originalRedCastle = loadImage("Resources/Images/RedCastle.png");
+	private static final BufferedImage originalBlueCastle = loadImage("Resources/Images/BlueCastle.png");;
+
+	private BufferedImage redCastle = originalRedCastle;
+	private BufferedImage blueCastle = originalBlueCastle;
+
+	private static BufferedImage loadImage(String file) {
 		try {
-			tmpRedCastle = ImageIO.read(new File("Resources/Images/RedCastle.png"));
+			return ImageIO.read(new File(file));
 		} catch (IOException e) {
-
+			return null;
 		}
-		originalRedCastle = tmpRedCastle;
 	}
-
-	private Image redCastle = originalRedCastle;
 
 	public Display(int width, int height) {
 		super();
@@ -103,7 +107,6 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		window.pack();
 
 		grabFocus();
-		
 
 	}
 
@@ -176,16 +179,31 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	protected void drawUnits(Graphics2D g2d) {
 		for (int id : engine.getAliveUnitIds()) {
 			ViewerUnit unit = engine.getUnit(id);
-			switch (unit.unitType) {
-			case CASTLE:
-				drawImage(g2d, redCastle, unit.getX(), unit.getY());
-				break;
-			case PEASANT:
-				g2d.setColor(Color.PINK);
-				fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
-				break;
-			default:
-				break;
+
+			if (unit.team == Team.RED) {
+				switch (unit.unitType) {
+				case CASTLE:
+					drawImage(g2d, redCastle, unit.getX(), unit.getY());
+					break;
+				case PEASANT:
+					g2d.setColor(Color.PINK);
+					fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
+					break;
+				default:
+					break;
+				}
+			} else {
+				switch (unit.unitType) {
+				case CASTLE:
+					drawImage(g2d, blueCastle, unit.getX(), unit.getY());
+					break;
+				case PEASANT:
+					g2d.setColor(Color.CYAN);
+					fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
+					break;
+				default:
+					break;
+				}
 			}
 
 		}
@@ -206,9 +224,10 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 				zoomX *= scaleSize / oldScale;
 				zoomY *= scaleSize / oldScale;
 			}
-
-			scaleImages();
-			setPosition();
+			if (scaleSize > 0 && scaleSize < 10000000) { // make sure scaleSize is positive and not insanely large
+				scaleImages();
+				setPosition();
+			}
 		}
 	}
 
@@ -226,22 +245,60 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	}
 
 	private void scaleImages() {
-		redCastle = originalRedCastle.getScaledInstance((int) scaleSize + 1, (int) scaleSize + 1,
-				BufferedImage.SCALE_FAST);
+
+		redCastle = scaleImage(originalRedCastle, scaleSize);
+		blueCastle = scaleImage(originalBlueCastle, scaleSize);
+	}
+
+	private BufferedImage scaleImage(BufferedImage before, double scaleSize) {
+		int w = before.getWidth();
+		int h = before.getHeight();
+
+		BufferedImage after = new BufferedImage((int) scaleSize, (int) scaleSize, BufferedImage.TYPE_INT_ARGB);
+
+		Graphics2D g2d = (Graphics2D) after.getGraphics();
+
+		g2d.scale(scaleSize / w, scaleSize / h);
+		g2d.drawImage(before, 0, 0, null);
+		g2d.dispose();
+
+		return after;
 	}
 
 	private void fillRect(Graphics2D g2d, double x, double y, double width, double height) {
-		g2d.fillRect((int) (x * scaleSize + left), (int) (y * scaleSize + top), (int) (width * scaleSize + 1),
-				(int) (height * scaleSize + 1));
+		// smart drawing -- it only draws it if it will show up on the screen
+		double left = (x * scaleSize + this.left);
+		double top = (y * scaleSize + this.top);
+		double absWidth = width * scaleSize + 1;
+		double absHeight = height * scaleSize + 1;
+
+		if (!(left > getWidth() || top > getHeight() || left + absWidth < 0 || top + absHeight < 0)) {
+			g2d.fillRect((int) left, (int) top, (int) absWidth, (int) absHeight);
+		}
 	}
 
 	private void drawLine(Graphics2D g2d, double startX, double startY, double endX, double endY) {
-		g2d.drawLine((int) (startX * scaleSize + left), (int) (startY * scaleSize + top),
-				(int) (endX * scaleSize + left), (int) (endY * scaleSize + top));
+		// smart drawing -- it only draws it if it will show up on the screen
+		int left = (int) (startX * scaleSize + this.left);
+		int top = (int) (startY * scaleSize + this.top);
+		int right = (int) (endX * scaleSize + this.left);
+		int bottom = (int) (endY * scaleSize + this.top);
+
+		if (!(left > getWidth() || top > getHeight() || right < 0 || bottom < 0)) {
+
+			g2d.drawLine(left, top, right, bottom);
+		}
 	}
 
-	private void drawImage(Graphics2D g2d, Image img, double x, double y) {
-		g2d.drawImage(img, (int) (x * scaleSize + left), (int) (y * scaleSize + top), null);
+	private void drawImage(Graphics2D g2d, BufferedImage img, double x, double y) {
+		// smart drawing -- it only draws it if it will show up on the screen
+
+		int left = (int) (x * scaleSize + this.left);
+		int top = (int) (y * scaleSize + this.top);
+
+		if (!(left > getWidth() || top > getHeight() || left + img.getWidth() < 0 || top + img.getHeight() < 0)) {
+			g2d.drawImage(img, left, top, null);
+		}
 	}
 
 	public void openGame(String fileLocation) {
@@ -255,7 +312,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		zoomX = 0;
 		zoomY = 0;
 		scaleImages();
-		
+
 		repaint();
 	}
 
@@ -354,7 +411,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	public static void main(String[] args) {
 		Display display = new Display(700, 500);
 		display.openGame(args[0]);
