@@ -250,6 +250,12 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		mapWidth = tileMap[0].length;
 		mapHeight = tileMap.length;
 
+		setDefaultScale();
+		zoom = 1;
+		zoomX = 0;
+		zoomY = 0;
+		scaleImages();
+		
 		repaint();
 	}
 
@@ -265,11 +271,6 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		}
 
 		repaint();
-	}
-
-	public static void main(String[] args) {
-		Display display = new Display(700, 500);
-		display.openGame(args[0]);
 	}
 
 	@Override
@@ -352,5 +353,10 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	public static void main(String[] args) {
+		Display display = new Display(700, 500);
+		display.openGame(args[0]);
 	}
 }
