@@ -308,7 +308,9 @@ public class Engine {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
 		} while (idRobotMap.containsKey(id));
 		Unit unit = new Unit(id, unitType, team, x, y);
+		
 		addRobot(unit, team);
+		
 		if (subtractResources) {
 			if (team == Team.RED) {
 				redGold -= unitType.CONSTRUCTION_GOLD;
@@ -323,6 +325,11 @@ public class Engine {
 
 		return id;
 
+	}
+	
+	protected void kill(int id) {
+		removeRobot(id);
+		System.out.println("Killed " + id);
 	}
 
 	protected Unit getUnit(int id) {

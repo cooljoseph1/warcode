@@ -5,35 +5,41 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.Image;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
+import javax.imageio.ImageIO;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import actions.Action;
 import warcode.Tile;
-import warcode.Unit;
 
-public class Display extends JPanel {
+public class Display extends JPanel implements ChangeListener, MouseWheelListener {
 
 	private static final long serialVersionUID = 5268301898468656990L;
 	private static final Color FOREST_GREEN = new Color(0, 153, 0);
 
 	private Window window;
+	private JSlider turnSlider = new JSlider(JSlider.HORIZONTAL, 0, 1000, 0);
+	private JLabel turnLabel = new JLabel("Turn: 0");
+	private JPanel topPanel = new JPanel();
 
 	private int displayWidth;
 	private int displayHeight;
 	private int mapWidth;
 	private int mapHeight;
 	private double scaleSize;
+	private double zoom = 1;
+	private double zoomX = 0;
+	private double zoomY = 0;
 	private int top;
 	private int left;
 
@@ -41,13 +47,48 @@ public class Display extends JPanel {
 
 	private ViewerEngine engine;
 
+	// robot images
+	private static final Image originalRedCastle;
+	static {
+		Image tmpRedCastle = null;
+		try {
+			tmpRedCastle = ImageIO.read(new File("Resources/Images/RedCastle.png"));
+		} catch (IOException e) {
+
+		}
+		originalRedCastle = tmpRedCastle;
+	}
+
+	private Image redCastle = originalRedCastle;
+
 	public Display(int width, int height) {
 		super();
 
+		// set up the window
 		window = new Window(this);
 
 		window.setPreferredSize(new Dimension(width, height));
 		window.setLayout(new BorderLayout());
+
+		// add in mouse listener
+		addMouseWheelListener(this);
+
+		// setup and add the turn slider and label
+		topPanel.setLayout(new BorderLayout());
+
+		turnSlider.setMinorTickSpacing(10);
+		turnSlider.setMajorTickSpacing(100);
+		turnSlider.setPaintTicks(true);
+		turnSlider.setPaintLabels(true);
+		turnSlider.addChangeListener(this);
+
+		topPanel.add(turnSlider, BorderLayout.NORTH);
+
+		turnLabel.setHorizontalAlignment(JLabel.CENTER);
+		topPanel.add(turnLabel, BorderLayout.SOUTH);
+		window.add(topPanel, BorderLayout.NORTH);
+
+		// add this (the display part) to the window
 		window.add(this, BorderLayout.CENTER);
 		window.pack();
 
@@ -59,20 +100,26 @@ public class Display extends JPanel {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
+		Graphics2D g2d = (Graphics2D) g;
+
 		displayWidth = getWidth();
 		displayHeight = getHeight();
 		setDefaultScale();
 
 		if (tileMap != null) {
-			drawMap(g);
+			drawMap(g2d);
 		}
 		if (engine != null) {
-			drawUnits(g);
+			drawUnits(g2d);
 		}
+		drawLines(g2d);
+
+		g2d.dispose();
+
 	}
 
-	protected void drawMap(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
+	protected void drawMap(Graphics2D g2d) {
+
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 
@@ -83,7 +130,7 @@ public class Display extends JPanel {
 					g2d.setColor(Color.WHITE);
 					break;
 				case IMPASSABLE:
-					g2d.setColor(Color.DARK_GRAY);
+					g2d.setColor(Color.BLACK);
 					break;
 				case GOLD:
 					g2d.setColor(Color.YELLOW);
@@ -100,43 +147,60 @@ public class Display extends JPanel {
 				default:
 					break;
 				}
-				g2d.fillRect(calculateDrawX(x), calculateDrawY(y), (int) scaleSize + 1, (int) scaleSize + 1);
+				fillRect(g2d, x, y, 1, 1);
 			}
-		}
-
-		g2d.setColor(Color.BLACK);
-		for (int y = 0; y < mapHeight + 1; y++) {
-			g2d.drawLine(left, calculateDrawY(y), calculateDrawX(mapWidth), calculateDrawY(y));
-		}
-		for (int x = 0; x < mapWidth + 1; x++) {
-			g2d.drawLine(calculateDrawX(x), top, calculateDrawX(x), calculateDrawY(mapHeight));
 		}
 	}
 
-	protected void drawUnits(Graphics g) {
-		
+	protected void drawLines(Graphics2D g2d) {
+		g2d.setColor(Color.BLACK);
+		for (int y = 0; y < mapHeight + 1; y++) {
+			drawLine(g2d, 0, y, mapWidth, y);
+		}
+		for (int x = 0; x < mapWidth + 1; x++) {
+			drawLine(g2d, x, 0, x, mapHeight);
+		}
+
+	}
+
+	protected void drawUnits(Graphics2D g2d) {
+		for (int id : engine.getAliveUnitIds()) {
+			ViewerUnit unit = engine.getUnit(id);
+			switch (unit.unitType) {
+			case CASTLE:
+				drawImage(g2d, redCastle, unit.getX(), unit.getY());
+				break;
+			case PEASANT:
+				g2d.setColor(Color.PINK);
+				fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
+				break;
+			default:
+				break;
+			}
+
+		}
 	}
 
 	private void setDefaultScale() {
-		scaleSize = Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1;
-		top = (int) ((displayHeight - (scaleSize * mapHeight)) / 2);
-		left = (int) ((displayWidth - (scaleSize * mapWidth)) / 2);
+		scaleSize = (Math.min(((double) displayWidth) / mapWidth, ((double) displayHeight) / mapHeight) - 1) * zoom;
+		top = (int) ((displayHeight - (scaleSize * mapHeight)) / 2 + zoomY * scaleSize);
+		left = (int) ((displayWidth - (scaleSize * mapWidth)) / 2 + zoomX * scaleSize);
+
+		redCastle = originalRedCastle.getScaledInstance((int) scaleSize, (int) scaleSize, BufferedImage.SCALE_DEFAULT);
 	}
 
-	private int[] calculateDrawPosition(int x, int y) {
-		return new int[] { left + (int) (x * scaleSize), top + (int) (y * scaleSize) };
+	private void fillRect(Graphics2D g2d, double x, double y, double width, double height) {
+		g2d.fillRect((int) (x * scaleSize + left), (int) (y * scaleSize + top), (int) (width * scaleSize + 1),
+				(int) (height * scaleSize + 1));
 	}
 
-	private int calculateDrawX(int x) {
-		return left + (int) (x * scaleSize);
+	private void drawLine(Graphics2D g2d, double startX, double startY, double endX, double endY) {
+		g2d.drawLine((int) (startX * scaleSize + left), (int) (startY * scaleSize + top),
+				(int) (endX * scaleSize + left), (int) (endY * scaleSize + top));
 	}
 
-	private int calculateDrawY(int y) {
-		return top + (int) (y * scaleSize);
-	}
-
-	private int[] calculateGridPosition(int x, int y) {
-		return new int[] { (int) Math.floor((x - left) / scaleSize), (int) Math.floor((y - top) / scaleSize) };
+	private void drawImage(Graphics2D g2d, Image img, double x, double y) {
+		g2d.drawImage(img, (int) (x * scaleSize + left), (int) (y * scaleSize + top), null);
 	}
 
 	public void openGame(String fileLocation) {
@@ -144,11 +208,52 @@ public class Display extends JPanel {
 		tileMap = engine.getMap().getPassableMap();
 		mapWidth = tileMap[0].length;
 		mapHeight = tileMap.length;
+
+		repaint();
+	}
+
+	public void setTurn(int turn) {
+		if (engine.getTurn() >= turn) {
+			while (engine.getTurn() > turn) {
+				engine.moveBackwardTurn();
+			}
+		} else {
+			while (engine.getTurn() < turn) {
+				engine.moveForwardTurn();
+			}
+		}
+
+		repaint();
 	}
 
 	public static void main(String[] args) {
 		Display display = new Display(700, 500);
 		display.openGame(args[0]);
-		System.out.println(display.tileMap[10][20]);
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		JSlider source = (JSlider) e.getSource();
+		setTurn(source.getValue());
+
+		turnLabel.setText("Turn: " + engine.getTurn());
+
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+
+		double centerX = getWidth() / 2d;
+		double centerY = getHeight() / 2d;
+		
+		double val = Math.exp(-e.getWheelRotation() / 10d);
+		
+		zoomX -= (e.getX() - left)/scaleSize/scaleSize*val;
+		zoomY -= (e.getY() - top)/scaleSize/scaleSize*val;
+		
+		zoom *= val;
+
+		repaint();
+
 	}
 }

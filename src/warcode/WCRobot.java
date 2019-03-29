@@ -117,6 +117,10 @@ public abstract class WCRobot {
 			Void result = task.get();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
+
+			// kill the robot if it throws an error
+			engine.kill(me.id);
+			
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
@@ -139,7 +143,7 @@ public abstract class WCRobot {
 			throw new MoveException(String.format("%d, %d is too far to move to", x, y));
 		} else if (engine.isOpen(x, y)) {
 			// each action adds an operation to the engine for replays.
-			engine.addAction(new MoveAction(me.getId(), x, y));
+			engine.addAction(new MoveAction(me.getId(), x, y, me.getX(), me.getY()));
 
 			this.me.setX(x);
 			this.me.setY(y);
@@ -241,11 +245,13 @@ public abstract class WCRobot {
 			throw new BuildException("Not enough gold to build unit");
 		} else if (getWood() < unitType.CONSTRUCTION_WOOD) {
 			throw new BuildException("Not enough wood to build unit");
+		} else if (!engine.isOpen(x, y)) {
+			throw new BuildException("Robot cannot build onto other robot");
 		} else {
 			int id = engine.makeRobot(x, y, me.team, unitType);
-			
-			//Do not need to add an action because the engine automatically does that
-			//engine.addAction(new BuildAction(id, me.getTeam(), unitType, x, y));
+
+			// Do not need to add an action because the engine automatically does that
+			// engine.addAction(new BuildAction(id, me.getTeam(), unitType, x, y));
 			built = true;
 		}
 

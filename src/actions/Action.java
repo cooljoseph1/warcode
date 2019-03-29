@@ -21,6 +21,8 @@ public abstract class Action {
 			return new BuildAction(infoParts);
 		case COLLECT:
 			return new CollectAction(infoParts);
+		case DIE:
+			return new DieAction(infoParts);
 		case GIVE:
 			return new GiveAction(infoParts);
 		case MINE:

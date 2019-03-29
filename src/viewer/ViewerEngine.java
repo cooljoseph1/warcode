@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import actions.Action;
@@ -124,12 +125,50 @@ public class ViewerEngine {
 		turn++;
 	}
 
+	public void moveBackwardTurn() {
+		Iterator turnActionsIterator = turnActions[turn - 1].descendingIterator();
+		while (turnActionsIterator.hasNext()) {
+			Action action = (Action) turnActionsIterator.next();
+			switch (action.actionType) {
+			case ATTACK:
+				undoAttackAction((AttackAction) action);
+				break;
+			case BUILD:
+				undoBuildAction((BuildAction) action);
+				break;
+			case COLLECT:
+				undoCollectAction((CollectAction) action);
+				break;
+			case DIE:
+				undoDieAction((DieAction) action);
+				break;
+			case GIVE:
+				undoGiveAction((GiveAction) action);
+				break;
+			case MINE:
+				undoMineAction((MineAction) action);
+				break;
+			case MOVE:
+				undoMoveAction((MoveAction) action);
+				break;
+			case SIGNAL:
+				undoSignalAction((SignalAction) action);
+				break;
+			default:
+				break;
+			}
+
+		}
+
+		turn--;
+	}
+
 	public void doAttackAction(AttackAction attackAction) {
 		attack(attackAction.x, attackAction.y, getUnit(attackAction.id).getUnitType());
 	}
 
 	public void doBuildAction(BuildAction buildAction) {
-		makeUnit(buildAction.x, buildAction.y, buildAction.team, buildAction.unitType);
+		makeUnit(buildAction.x, buildAction.y, buildAction.team, buildAction.unitType, buildAction.id);
 	}
 
 	public void doCollectAction(CollectAction collectAction) {
@@ -139,7 +178,7 @@ public class ViewerEngine {
 	}
 
 	public void doDieAction(DieAction dieAction) {
-		aliveIdQueue.remove(dieAction.id);
+		aliveIdQueue.remove(Integer.valueOf(dieAction.id));
 	}
 
 	public void doGiveAction(GiveAction giveAction) {
@@ -160,6 +199,46 @@ public class ViewerEngine {
 	}
 
 	public void doSignalAction(SignalAction signalAction) {
+		getUnit(signalAction.id).setSignal(signalAction.signal);
+	}
+
+	public void undoAttackAction(AttackAction attackAction) {
+		unAttack(attackAction.x, attackAction.y, getUnit(attackAction.id).getUnitType());
+	}
+
+	public void undoBuildAction(BuildAction buildAction) {
+		aliveIdQueue.remove(Integer.valueOf(buildAction.id));
+		idUnitMap.remove(buildAction.id);
+	}
+
+	public void undoCollectAction(CollectAction collectAction) {
+		ViewerUnit unit = getUnit(collectAction.id);
+		unit.addWood(-SPECS.COLLECT_AMOUNT);
+		decreaseWood(collectAction.x, collectAction.y, -SPECS.COLLECT_AMOUNT);
+	}
+
+	public void undoDieAction(DieAction dieAction) {
+		aliveIdQueue.add(dieAction.id);
+	}
+
+	public void undoGiveAction(GiveAction giveAction) {
+		ViewerUnit unit = getUnit(giveAction.id);
+		unit.decreaseWood(-giveAction.wood);
+		unit.decreaseGold(-giveAction.gold);
+		giveResources(giveAction.x, giveAction.y, -giveAction.wood, -giveAction.gold);
+	}
+
+	public void undoMineAction(MineAction mineAction) {
+		ViewerUnit unit = getUnit(mineAction.id);
+		unit.addGold(-SPECS.MINE_AMOUNT);
+		decreaseWood(unit.getX(), unit.getY(), -SPECS.MINE_AMOUNT);
+	}
+
+	public void undoMoveAction(MoveAction moveAction) {
+		getUnit(moveAction.id).setPos(moveAction.startX, moveAction.startY);
+	}
+
+	public void undoSignalAction(SignalAction signalAction) {
 		getUnit(signalAction.id).setSignal(signalAction.signal);
 	}
 
@@ -256,17 +335,21 @@ public class ViewerEngine {
 	}
 
 	protected void attack(int x, int y, UnitType unitType) {
-		LinkedList<Integer> idsToRemove = new LinkedList<Integer>();
 		for (int id : aliveIdQueue) {
 			ViewerUnit viewerUnit = getUnit(id);
 			if (distanceSquared(viewerUnit.getX(), viewerUnit.getY(), x, y) <= unitType.SPLASH_RADIUS) {
 				viewerUnit.hurtUnit(unitType.ATTACK_DAMAGE);
-				if (viewerUnit.getHealth() <= 0) {
-					idsToRemove.add(viewerUnit.id);
-				}
 			}
 		}
-		removeAllUnits(idsToRemove);
+	}
+
+	protected void unAttack(int x, int y, UnitType unitType) {
+		for (int id : aliveIdQueue) {
+			ViewerUnit viewerUnit = getUnit(id);
+			if (distanceSquared(viewerUnit.getX(), viewerUnit.getY(), x, y) <= unitType.SPLASH_RADIUS) {
+				viewerUnit.hurtUnit(-unitType.ATTACK_DAMAGE);
+			}
+		}
 	}
 
 	/**
@@ -277,17 +360,16 @@ public class ViewerEngine {
 	 * @param unitType
 	 * @return id of new unit
 	 */
-	protected int makeUnit(int x, int y, Team team, UnitType unitType) {
-		return makeUnit(x, y, team, unitType, true);
+	protected void makeUnit(int x, int y, Team team, UnitType unitType, int id) {
+		makeUnit(x, y, team, unitType, id, true);
 	}
 
-	protected int makeUnit(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
-		int id;
-		do {
-			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
-		} while (idUnitMap.containsKey(id));
+	protected void makeUnit(int x, int y, Team team, UnitType unitType, int id, boolean subtractResources) {
+
 		ViewerUnit viewerUnit = new ViewerUnit(id, unitType, team, x, y);
+
 		addUnit(viewerUnit, team);
+
 		if (subtractResources) {
 			if (team == Team.RED) {
 				redGold -= unitType.CONSTRUCTION_GOLD;
@@ -297,17 +379,21 @@ public class ViewerEngine {
 				blueWood -= unitType.CONSTRUCTION_WOOD;
 			}
 		}
-		return id;
-
 	}
 
 	protected ViewerUnit getUnit(int id) {
 		return idUnitMap.get(id);
 	}
 
+	protected LinkedList<Integer> getAliveUnitIds() { // Dangerous! Returns the actual Linked List!
+		return aliveIdQueue;
+	}
+
 	private void addUnit(ViewerUnit viewerUnit, Team team) {
 		// add robot to the id-robot hashmap
 		idUnitMap.put(viewerUnit.id, viewerUnit);
+
+		aliveIdQueue.addFirst(viewerUnit.id);
 	}
 
 	private void removeUnit(int id) {
@@ -316,8 +402,7 @@ public class ViewerEngine {
 		if (viewerUnit.unitType == SPECS.Castle) {
 			castles.remove(viewerUnit);
 		}
-		// remove from hashmap
-		idUnitMap.remove(id);
+
 		// remove from turn queue
 		aliveIdQueue.remove(Integer.valueOf(id));
 	}
@@ -327,9 +412,17 @@ public class ViewerEngine {
 			removeUnit(id);
 		}
 	}
-	
+
 	public ViewerMap getMap() {
 		return map;
+	}
+
+	public int getTurns() {
+		return turns;
+	}
+
+	public int getTurn() {
+		return turn;
 	}
 
 	protected final static int distanceSquared(ViewerUnit unit1, ViewerUnit unit2) {
