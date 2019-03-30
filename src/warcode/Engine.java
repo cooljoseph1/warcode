@@ -106,7 +106,7 @@ public class Engine {
 		}
 		return winner;
 	}
-	
+
 	public Winner getWinner() {
 		return winner;
 	}
@@ -178,6 +178,10 @@ public class Engine {
 		}
 
 		return units.toArray(new Unit[units.size()]);
+	}
+
+	protected boolean isOnMap(int x, int y) {
+		return (x >= 0 && y >= 0 && x < map.getWidth() && y < map.getHeight());
 	}
 
 	protected boolean isOpen(int x, int y) {
@@ -308,9 +312,9 @@ public class Engine {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
 		} while (idRobotMap.containsKey(id));
 		Unit unit = new Unit(id, unitType, team, x, y);
-		
+
 		addRobot(unit, team);
-		
+
 		if (subtractResources) {
 			if (team == Team.RED) {
 				redGold -= unitType.CONSTRUCTION_GOLD;
@@ -326,7 +330,7 @@ public class Engine {
 		return id;
 
 	}
-	
+
 	protected void kill(int id) {
 		removeRobot(id);
 		System.out.println("Killed " + id);

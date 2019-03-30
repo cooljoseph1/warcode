@@ -59,18 +59,28 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	private ViewerEngine engine;
 
 	// robot images
-	private static final BufferedImage originalRedCastle = loadImage("Resources/Images/RedCastle.png");
-	private static final BufferedImage originalBlueCastle = loadImage("Resources/Images/BlueCastle.png");
 	private static final BufferedImage originalRedArcher = loadImage("Resources/Images/RedArcher.png");
-	private static final BufferedImage originalBlueArcher = loadImage("Resources/Images/BlueArcher.png");
+	private static final BufferedImage originalRedCastle = loadImage("Resources/Images/RedCastle.png");
+	private static final BufferedImage originalRedKnight = loadImage("Resources/Images/RedKnight.png");
+	private static final BufferedImage originalRedMage = loadImage("Resources/Images/RedMage.png");
 	private static final BufferedImage originalRedPeasant = loadImage("Resources/Images/RedPeasant.png");
+
+	private static final BufferedImage originalBlueArcher = loadImage("Resources/Images/BlueArcher.png");
+	private static final BufferedImage originalBlueCastle = loadImage("Resources/Images/BlueCastle.png");
+	private static final BufferedImage originalBlueKnight = loadImage("Resources/Images/BlueKnight.png");
+	private static final BufferedImage originalBlueMage = loadImage("Resources/Images/BlueMage.png");
 	private static final BufferedImage originalBluePeasant = loadImage("Resources/Images/BluePeasant.png");
 
-	private BufferedImage redCastle = originalRedCastle;
-	private BufferedImage blueCastle = originalBlueCastle;
 	private BufferedImage redArcher = originalRedArcher;
-	private BufferedImage blueArcher = originalBlueArcher;
+	private BufferedImage redCastle = originalRedCastle;
+	private BufferedImage redKnight = originalRedKnight;
+	private BufferedImage redMage = originalRedMage;
 	private BufferedImage redPeasant = originalRedPeasant;
+
+	private BufferedImage blueArcher = originalBlueArcher;
+	private BufferedImage blueCastle = originalBlueCastle;
+	private BufferedImage blueKnight = originalBlueKnight;
+	private BufferedImage blueMage = originalBlueMage;
 	private BufferedImage bluePeasant = originalBluePeasant;
 
 	private static BufferedImage loadImage(String file) {
@@ -190,8 +200,17 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 			if (unit.team == Team.RED) {
 				switch (unit.unitType) {
+				case ARCHER:
+					drawImage(g2d, redArcher, unit.getX(), unit.getY());
+					break;
 				case CASTLE:
 					drawImage(g2d, redCastle, unit.getX(), unit.getY());
+					break;
+				case KNIGHT:
+					drawImage(g2d, redKnight, unit.getX(), unit.getY());
+					break;
+				case MAGE:
+					drawImage(g2d, redMage, unit.getX(), unit.getY());
 					break;
 				case PEASANT:
 					drawImage(g2d, redPeasant, unit.getX(), unit.getY());
@@ -201,8 +220,17 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 				}
 			} else {
 				switch (unit.unitType) {
+				case ARCHER:
+					drawImage(g2d, blueArcher, unit.getX(), unit.getY());
+					break;
 				case CASTLE:
 					drawImage(g2d, blueCastle, unit.getX(), unit.getY());
+					break;
+				case KNIGHT:
+					drawImage(g2d, blueKnight, unit.getX(), unit.getY());
+					break;
+				case MAGE:
+					drawImage(g2d, blueMage, unit.getX(), unit.getY());
 					break;
 				case PEASANT:
 					drawImage(g2d, bluePeasant, unit.getX(), unit.getY());
@@ -251,13 +279,19 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	}
 
 	private void scaleImages() {
-
-		redCastle = scaleImage(originalRedCastle, scaleSize);
-		blueCastle = scaleImage(originalBlueCastle, scaleSize);
+		
 		redArcher = scaleImage(originalRedArcher, scaleSize);
-		blueArcher = scaleImage(originalBlueArcher, scaleSize);
+		redCastle = scaleImage(originalRedCastle, scaleSize);
+		redKnight = scaleImage(originalRedKnight, scaleSize);
+		redMage = scaleImage(originalRedMage, scaleSize);
 		redPeasant = scaleImage(originalRedPeasant, scaleSize);
+		
+		blueArcher = scaleImage(originalBlueArcher, scaleSize);
+		blueCastle = scaleImage(originalBlueCastle, scaleSize);
+		blueKnight = scaleImage(originalBlueKnight, scaleSize);
+		blueMage = scaleImage(originalBlueMage, scaleSize);
 		bluePeasant = scaleImage(originalBluePeasant, scaleSize);
+		
 	}
 
 	private BufferedImage scaleImage(BufferedImage before, double scaleSize) {

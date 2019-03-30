@@ -120,7 +120,7 @@ public abstract class WCRobot {
 
 			// kill the robot if it throws an error
 			engine.kill(me.id);
-			
+
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
@@ -310,6 +310,17 @@ public abstract class WCRobot {
 	 */
 	public final long getTime() {
 		return time;
+	}
+
+	public final boolean isOpen(int x, int y) throws GameException {
+		if (!engine.isOnMap(x, y)) {
+			throw new GameException("Robot attempted to check a location that is off the map.");
+		}
+		return engine.isOpen(x, y);
+	}
+
+	public final boolean isOnMap(int x, int y) {
+		return engine.isOnMap(x, y);
 	}
 
 	protected void subtractTime(long time) {
