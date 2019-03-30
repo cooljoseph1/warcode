@@ -162,7 +162,7 @@ public class Map {
 		return (passableMap[y][x] == Tile.PASSABLE || passableMap[y][x] == Tile.GOLD);
 	}
 
-	protected void decreaseGold(int x, int y, int amount) {
+	void decreaseGold(int x, int y, int amount) {
 		goldMap[y][x] -= amount;
 		if (goldMap[y][x] <= 0) {
 			goldMap[y][x] = 0;
@@ -172,7 +172,7 @@ public class Map {
 		}
 	}
 
-	protected void decreaseWood(int x, int y, int amount) {
+	void decreaseWood(int x, int y, int amount) {
 		woodMap[y][x] -= amount;
 		if (woodMap[y][x] <= 0) {
 			woodMap[y][x] = 0;
@@ -186,7 +186,7 @@ public class Map {
 		return passableMap[y][x];
 	}
 
-	protected LinkedList<InitialCastle> getCastleLocations() {
+	LinkedList<InitialCastle> getCastleLocations() {
 		return (LinkedList<InitialCastle>) initialCastleLocations.clone();
 
 	}

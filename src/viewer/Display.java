@@ -5,14 +5,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -279,22 +276,23 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	}
 
 	private void scaleImages() {
-		
+
 		redArcher = scaleImage(originalRedArcher, scaleSize);
 		redCastle = scaleImage(originalRedCastle, scaleSize);
 		redKnight = scaleImage(originalRedKnight, scaleSize);
 		redMage = scaleImage(originalRedMage, scaleSize);
 		redPeasant = scaleImage(originalRedPeasant, scaleSize);
-		
+
 		blueArcher = scaleImage(originalBlueArcher, scaleSize);
 		blueCastle = scaleImage(originalBlueCastle, scaleSize);
 		blueKnight = scaleImage(originalBlueKnight, scaleSize);
 		blueMage = scaleImage(originalBlueMage, scaleSize);
 		bluePeasant = scaleImage(originalBluePeasant, scaleSize);
-		
+
 	}
 
 	private BufferedImage scaleImage(BufferedImage before, double scaleSize) {
+
 		int w = before.getWidth();
 		int h = before.getHeight();
 
@@ -307,6 +305,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		g2d.dispose();
 
 		return after;
+
 	}
 
 	private void fillRect(Graphics2D g2d, double x, double y, double width, double height) {

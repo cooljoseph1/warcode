@@ -12,6 +12,15 @@ public class Unit {
 	private int gold;
 	private Signal signal;
 
+	private boolean moved = true;
+	private boolean attacked = true;
+	private boolean gathered = true;
+	private boolean given = true;
+	private boolean built = true;
+	private boolean signalled = true;
+	
+	private boolean turnTaken = false;
+
 	/**
 	 * 
 	 * @param id
@@ -38,75 +47,132 @@ public class Unit {
 		this.y = y;
 	}
 
-	protected void setPos(int x, int y) {
+	void setPos(int x, int y) {
 		this.x = x;
 		this.y = y;
 	}
 
-	protected void setX(int x) {
+	void setX(int x) {
 		this.x = x;
 	}
 
-	protected void setY(int y) {
+	void setY(int y) {
 		this.y = y;
 	}
 
-	protected void setWood(int wood) {
+	void setWood(int wood) {
 		this.wood = wood;
 	}
 
-	protected void setGold(int gold) {
+	void setGold(int gold) {
 		this.gold = gold;
 	}
 
-	protected void addWood(int wood) {
+	void addWood(int wood) {
 		this.wood += wood;
 		if (this.gold + this.wood > SPECS.MAX_RESOURCES) {
 			this.wood = SPECS.MAX_RESOURCES - this.gold;
 		}
 	}
 
-	protected void addGold(int gold) {
+	void addGold(int gold) {
 		this.gold += gold;
 		if (this.gold + this.wood > SPECS.MAX_RESOURCES) {
 			this.gold = SPECS.MAX_RESOURCES - this.wood;
 		}
 	}
 
-	protected void decreaseWood(int wood) {
+	void decreaseWood(int wood) {
 		this.wood -= wood;
 		if (this.wood < 0) {
 			throw new Error("Uh oh, how is your wood below zero?");
 		}
 	}
 
-	protected void decreaseGold(int gold) {
+	void decreaseGold(int gold) {
 		this.gold -= gold;
 		if (this.gold < 0) {
 			throw new Error("Uh oh, how is your gold below zero?");
 		}
 	}
 
-	protected void setHealth(int health) {
+	void setHealth(int health) {
 		this.health = health;
 	}
 
-	protected void hurtUnit(int amount) {
+	void hurtUnit(int amount) {
 		health -= amount;
 		if (health < 0) {
 			health = 0;
 		}
 	}
 
-	protected void setSignal(int value) {
+	void setSignal(int value) {
 		this.signal = new Signal(value, team, id, unitType);
 	}
-	protected void resetSignal() {
+
+	void resetSignal() {
 		this.signal = null;
 	}
 
-	public int getGold() {
+	int getGold() {
 		return gold;
+	}
+
+	void setMoved(boolean state) {
+		moved = state;
+	}
+
+	void setGathered(boolean state) {
+		gathered = state;
+	}
+
+	void setGiven(boolean state) {
+		given = state;
+	}
+
+	void setAttacked(boolean state) {
+		attacked = state;
+	}
+
+	void setSignalled(boolean state) {
+		signalled = state;
+	}
+
+	void setBuilt(boolean state) {
+		built = state;
+	}
+	
+	void setTurnTaken(boolean state) {
+		turnTaken = state;
+	}
+
+	public boolean hasMoved() {
+		return moved;
+	}
+
+	public boolean hasGathered() {
+		return gathered;
+	}
+
+	public boolean hasGiven() {
+		return given;
+	}
+
+	public boolean hasAttakced() {
+		return attacked;
+	}
+
+	public boolean hasSignalled() {
+		return signalled;
+	}
+
+	public boolean hasBuilt() {
+		return built;
+	}
+	
+	public boolean hasTakenTurn() {
+		return turnTaken;
 	}
 
 	public int getWood() {
@@ -128,15 +194,15 @@ public class Unit {
 	public int getHealth() {
 		return health;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
-	
+
 	public UnitType getUnitType() {
 		return unitType;
 	}
-	
+
 	public Team getTeam() {
 		return team;
 	}

@@ -13,8 +13,8 @@ import actions.BuildAction;
 import actions.DieAction;
 
 public class Engine {
-	public final Constructor<WCRobot> redConstructor;
-	public final Constructor<WCRobot> blueConstructor;
+	private final Constructor<WCRobot> redConstructor;
+	private final Constructor<WCRobot> blueConstructor;
 
 	private Map map;
 
@@ -89,6 +89,8 @@ public class Engine {
 					redWon = false;
 				}
 
+				// let the robot take a turn
+				robot.me.setTurnTaken(false);
 				robot._do_turn();
 			}
 
@@ -131,23 +133,23 @@ public class Engine {
 		}
 	}
 
-	protected void addAction(Action operation) {
+	void addAction(Action operation) {
 		turnActions.add(operation.toString());
 	}
 
-	protected Tile[][] getPassableMap() {
+	Tile[][] getPassableMap() {
 		return map.getPassableMapCopy();
 	}
 
-	protected int[][] getGoldMap() {
+	int[][] getGoldMap() {
 		return map.getGoldMapCopy();
 	}
 
-	protected int[][] getWoodMap() {
+	int[][] getWoodMap() {
 		return map.getWoodMapCopy();
 	}
 
-	protected int[][] getVisibleUnitMap(Unit unit) {
+	int[][] getVisibleUnitMap(Unit unit) {
 		int[][] visibleUnitMap = new int[map.height][map.width];
 
 		for (int id : aliveIdQueue) {
@@ -167,7 +169,7 @@ public class Engine {
 		return visibleUnitMap;
 	}
 
-	protected Unit[] getVisibleUnits(Unit unit) {
+	Unit[] getVisibleUnits(Unit unit) {
 		LinkedList<Unit> units = new LinkedList<Unit>();
 		for (int id : aliveIdQueue) {
 			Unit tempUnit = getUnit(id);
@@ -180,11 +182,11 @@ public class Engine {
 		return units.toArray(new Unit[units.size()]);
 	}
 
-	protected boolean isOnMap(int x, int y) {
+	boolean isOnMap(int x, int y) {
 		return (x >= 0 && y >= 0 && x < map.getWidth() && y < map.getHeight());
 	}
 
-	protected boolean isOpen(int x, int y) {
+	boolean isOpen(int x, int y) {
 		if (!map.isOpen(x, y)) {
 			return false;
 		}
@@ -196,15 +198,15 @@ public class Engine {
 		return true;
 	}
 
-	protected boolean isOnMine(int x, int y) {
+	boolean isOnMine(int x, int y) {
 		return (map.get(x, y) == Tile.GOLD);
 	}
 
-	protected boolean isOnTree(int x, int y) {
+	boolean isOnTree(int x, int y) {
 		return (map.get(x, y) == Tile.WOOD);
 	}
 
-	protected boolean isOnCastle(int x, int y) {
+	boolean isOnCastle(int x, int y) {
 		for (Unit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
 				return true;
@@ -220,7 +222,7 @@ public class Engine {
 	 * @param gold
 	 * @param wood
 	 */
-	protected void giveResources(int x, int y, int wood, int gold) {
+	void giveResources(int x, int y, int wood, int gold) {
 		Unit castleAtLocation = null;
 		for (Unit castle : castles) {
 			if (castle.getX() == x && castle.getY() == y) {
@@ -240,47 +242,47 @@ public class Engine {
 		}
 	}
 
-	protected void decreaseGold(int x, int y, int amount) {
+	void decreaseGold(int x, int y, int amount) {
 		map.decreaseGold(x, y, amount);
 	}
 
-	protected void decreaseWood(int x, int y, int amount) {
+	void decreaseWood(int x, int y, int amount) {
 		map.decreaseWood(x, y, amount);
 	}
 
-	protected void addRedGold(int amount) {
+	void addRedGold(int amount) {
 		redGold += amount;
 	}
 
-	protected void addBlueGold(int amount) {
+	void addBlueGold(int amount) {
 		blueGold += amount;
 	}
 
-	protected void addRedWood(int amount) {
+	void addRedWood(int amount) {
 		redWood += amount;
 	}
 
-	protected void addBlueWood(int amount) {
+	void addBlueWood(int amount) {
 		blueWood += amount;
 	}
 
-	protected int getRedGold() {
+	int getRedGold() {
 		return redGold;
 	}
 
-	protected int getRedWood() {
+	int getRedWood() {
 		return redWood;
 	}
 
-	protected int getBlueGold() {
+	int getBlueGold() {
 		return blueGold;
 	}
 
-	protected int getBlueWood() {
+	int getBlueWood() {
 		return blueWood;
 	}
 
-	protected void attack(int x, int y, UnitType unitType) {
+	void attack(int x, int y, UnitType unitType) {
 		LinkedList<Integer> idsToRemove = new LinkedList<Integer>();
 		for (int id : aliveIdQueue) {
 			WCRobot robot = getRobot(id);
@@ -302,11 +304,11 @@ public class Engine {
 	 * @param unitType
 	 * @return id of new unit
 	 */
-	protected int makeRobot(int x, int y, Team team, UnitType unitType) {
+	int makeRobot(int x, int y, Team team, UnitType unitType) {
 		return makeRobot(x, y, team, unitType, true);
 	}
 
-	protected int makeRobot(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
+	int makeRobot(int x, int y, Team team, UnitType unitType, boolean subtractResources) {
 		int id;
 		do {
 			id = (int) (Math.random() * (Math.pow(2, 16) - 1) + 1);
@@ -331,12 +333,12 @@ public class Engine {
 
 	}
 
-	protected void kill(int id) {
+	void kill(int id) {
 		removeRobot(id);
 		System.out.println("Killed " + id);
 	}
 
-	protected Unit getUnit(int id) {
+	Unit getUnit(int id) {
 		return idRobotMap.get(id).me;
 	}
 
@@ -393,13 +395,13 @@ public class Engine {
 		}
 	}
 
-	protected final static int distanceSquared(Unit unit1, Unit unit2) {
+	final static int distanceSquared(Unit unit1, Unit unit2) {
 		int dx = unit1.getX() - unit2.getX();
 		int dy = unit1.getY() - unit2.getY();
 		return dx * dx + dy * dy;
 	}
 
-	protected final static int distanceSquared(int x1, int y1, int x2, int y2) {
+	final static int distanceSquared(int x1, int y1, int x2, int y2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return dx * dx + dy * dy;

@@ -1,6 +1,6 @@
 package exceptions;
 
-public class GameException extends Exception {
+public class GameException extends RuntimeException {
 
 	private static final long serialVersionUID = -4309489418536948607L;
 

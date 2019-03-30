@@ -42,13 +42,6 @@ public abstract class WCRobot {
 
 	private Engine engine;
 
-	private boolean moved = true;
-	private boolean attacked = true;
-	private boolean gathered = true;
-	private boolean given = true;
-	private boolean built = true;
-	private boolean signalled = true;
-
 	private RunTurn runTurn;
 
 	public WCRobot() {
@@ -67,7 +60,7 @@ public abstract class WCRobot {
 	 * 
 	 *               Time in milliseconds
 	 */
-	public WCRobot(Unit me, Engine engine, long time) {
+	WCRobot(Unit me, Engine engine, long time) {
 		this.me = me;
 		this.engine = engine;
 		this.time = time;
@@ -77,6 +70,14 @@ public abstract class WCRobot {
 
 	void _do_turn() {
 
+		// Make sure the robot only takes one turn per round
+		if (me.hasTakenTurn()) {
+			System.out.println("Robot has been killed for attempting to take multiple turns in one round.");
+			engine.kill(me.id);
+		}
+
+		me.setTurnTaken(true);
+
 		if (time < 0) {
 			System.out.println(String.format("Time overdrawn by %f milliseconds", -time / 1000000f));
 			time += SPECS.INCREMENT_TIME; // add time to clock
@@ -85,12 +86,13 @@ public abstract class WCRobot {
 			time += SPECS.INCREMENT_TIME; // add time to clock
 		}
 
-		moved = false;
-		attacked = false;
-		gathered = false;
-		given = false;
-		signalled = false;
-		built = false;
+		me.setMoved(false);
+		me.setAttacked(false);
+		me.setGathered(false);
+		me.setGiven(false);
+		me.setSignalled(false);
+		me.setBuilt(false);
+
 		me.resetSignal();
 
 		map = engine.getPassableMap();
@@ -129,14 +131,14 @@ public abstract class WCRobot {
 	}
 
 	// Override this method in your subclass.
-	public abstract void turn() throws GameException;
+	public abstract void turn();
 
-	// ##############################################################################################################
-	// types of actions people an perform.
+	// -------------------------------------------------------------------------------------------------------------
+	// actions robots can use
 	public final void move(int x, int y) throws MoveException {
 		if (me.unitType == SPECS.Castle) {
 			throw new MoveException("Castles cannot move");
-		} else if (moved) {
+		} else if (me.hasMoved()) {
 			throw new MoveException("Robot can only move once per turn");
 		} else if (Engine.distanceSquared(me.getX(), me.getY(), x, y) > me.unitType.MOVEMENT_SPEED) {// distance squared
 																										// is too far
@@ -145,9 +147,10 @@ public abstract class WCRobot {
 			// each action adds an operation to the engine for replays.
 			engine.addAction(new MoveAction(me.getId(), x, y, me.getX(), me.getY()));
 
-			this.me.setX(x);
-			this.me.setY(y);
-			moved = true;
+			me.setX(x);
+			me.setY(y);
+			me.setMoved(true);
+			;
 		} else {
 			throw new MoveException("Robot cannot move onto impassable terrain");
 		}
@@ -156,14 +159,14 @@ public abstract class WCRobot {
 	public final void mine() throws MineException {
 		if (me.unitType != SPECS.Peasant) {
 			throw new MineException("Only peasants can mine");
-		} else if (gathered) {
+		} else if (me.hasGathered()) {
 			throw new MineException("Robot can only mine/collect once per turn");
 		} else if (engine.isOnMine(me.getX(), me.getY())) {
 			engine.addAction(new MineAction(me.getId()));
 
-			this.me.addGold(SPECS.MINE_AMOUNT);
+			me.addGold(SPECS.MINE_AMOUNT);
 			engine.decreaseGold(me.getX(), me.getY(), SPECS.MINE_AMOUNT);
-			gathered = true;
+			me.setGathered(true);
 		} else {
 			throw new MineException("Robot is not on a mine");
 		}
@@ -173,7 +176,7 @@ public abstract class WCRobot {
 	public final void collect(int x, int y) throws CollectException {
 		if (me.unitType != SPECS.Peasant) {
 			throw new CollectException("Only peasants can collect wood");
-		} else if (gathered) {
+		} else if (me.hasGathered()) {
 			throw new CollectException("Peasant can only collect/mine once per turn");
 		} else if (Engine.distanceSquared(x, y, me.getX(), me.getY()) > 2) // a distance of two is the adjacent tiles
 																			// and itself
@@ -184,7 +187,7 @@ public abstract class WCRobot {
 
 			this.me.addWood(SPECS.COLLECT_AMOUNT);
 			engine.decreaseWood(x, y, SPECS.COLLECT_AMOUNT);
-			gathered = true;
+			me.setGathered(true);
 		} else {
 			throw new CollectException(String.format("%d %d does not contain any wood", x, y));
 		}
@@ -193,7 +196,7 @@ public abstract class WCRobot {
 	public final void give(int x, int y, int gold, int wood) throws GiveException {
 		if (me.unitType != SPECS.Peasant) {
 			throw new GiveException("Only peasants can give resources");
-		} else if (given) {
+		} else if (me.hasGiven()) {
 			throw new GiveException("Peasant can only give resources once per turn");
 		} else if (gold > me.getGold()) {
 			throw new GiveException(String.format("Peasant does not have enough gold to give %d gold", gold));
@@ -212,13 +215,13 @@ public abstract class WCRobot {
 			me.decreaseGold(gold);
 
 			engine.giveResources(x, y, wood, gold);
-			given = true;
+			me.setGiven(true);
 		}
 
 	}
 
 	public final void attack(int x, int y) throws AttackException {
-		if (attacked) {
+		if (me.hasAttakced()) {
 			throw new AttackException("Robot can only attack once per turn");
 		} else if (Engine.distanceSquared(x, y, me.getX(), me.getY()) > me.unitType.ATTACK_RADIUS) {
 			throw new AttackException("Robot cannot attack outside of attack radius");
@@ -226,12 +229,12 @@ public abstract class WCRobot {
 			engine.addAction(new AttackAction(me.getId(), x, y));
 
 			engine.attack(x, y, me.unitType);
-			attacked = true;
+			me.setAttacked(true);
 		}
 	}
 
 	public final void buildUnit(int x, int y, UnitType unitType) throws BuildException {
-		if (built) {
+		if (me.hasBuilt()) {
 			throw new BuildException("Robot can only build one unit per turn");
 		} else if (me.unitType != SPECS.Castle && me.unitType != SPECS.Peasant) {
 			throw new BuildException("Only peasants and castles can build units");
@@ -248,22 +251,22 @@ public abstract class WCRobot {
 		} else if (!engine.isOpen(x, y)) {
 			throw new BuildException("Robot cannot build onto other robot");
 		} else {
-			int id = engine.makeRobot(x, y, me.team, unitType);
+			engine.makeRobot(x, y, me.team, unitType);
 
-			// Do not need to add an action because the engine automatically does that
-			// engine.addAction(new BuildAction(id, me.getTeam(), unitType, x, y));
-			built = true;
+			// Do not need to add an action because the engine automatically does that when
+			// creating a robot
+			me.setBuilt(true);
 		}
 
 	}
 
 	public final void signal(int message) throws SignalException {
-		if (signalled) {
+		if (me.hasSignalled()) {
 			throw new SignalException("Robot can only signal once per turn");
 		} else {
 			engine.addAction(new SignalAction(me.getId(), message, me.getSignal().value));
 			this.me.setSignal(message);
-			signalled = true;
+			me.setSignalled(true);
 		}
 	}
 
@@ -323,7 +326,7 @@ public abstract class WCRobot {
 		return engine.isOnMap(x, y);
 	}
 
-	protected void subtractTime(long time) {
+	void subtractTime(long time) {
 		this.time -= time;
 	}
 }
