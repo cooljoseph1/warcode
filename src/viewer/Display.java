@@ -60,10 +60,18 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	// robot images
 	private static final BufferedImage originalRedCastle = loadImage("Resources/Images/RedCastle.png");
-	private static final BufferedImage originalBlueCastle = loadImage("Resources/Images/BlueCastle.png");;
+	private static final BufferedImage originalBlueCastle = loadImage("Resources/Images/BlueCastle.png");
+	private static final BufferedImage originalRedArcher = loadImage("Resources/Images/RedArcher.png");
+	private static final BufferedImage originalBlueArcher = loadImage("Resources/Images/BlueArcher.png");
+	private static final BufferedImage originalRedPeasant = loadImage("Resources/Images/RedPeasant.png");
+	private static final BufferedImage originalBluePeasant = loadImage("Resources/Images/BluePeasant.png");
 
 	private BufferedImage redCastle = originalRedCastle;
 	private BufferedImage blueCastle = originalBlueCastle;
+	private BufferedImage redArcher = originalRedArcher;
+	private BufferedImage blueArcher = originalBlueArcher;
+	private BufferedImage redPeasant = originalRedPeasant;
+	private BufferedImage bluePeasant = originalBluePeasant;
 
 	private static BufferedImage loadImage(String file) {
 		try {
@@ -186,8 +194,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 					drawImage(g2d, redCastle, unit.getX(), unit.getY());
 					break;
 				case PEASANT:
-					g2d.setColor(Color.PINK);
-					fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
+					drawImage(g2d, redPeasant, unit.getX(), unit.getY());
 					break;
 				default:
 					break;
@@ -198,8 +205,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 					drawImage(g2d, blueCastle, unit.getX(), unit.getY());
 					break;
 				case PEASANT:
-					g2d.setColor(Color.CYAN);
-					fillRect(g2d, unit.getX(), unit.getY(), 1, 1);
+					drawImage(g2d, bluePeasant, unit.getX(), unit.getY());
 					break;
 				default:
 					break;
@@ -248,6 +254,10 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 		redCastle = scaleImage(originalRedCastle, scaleSize);
 		blueCastle = scaleImage(originalBlueCastle, scaleSize);
+		redArcher = scaleImage(originalRedArcher, scaleSize);
+		blueArcher = scaleImage(originalBlueArcher, scaleSize);
+		redPeasant = scaleImage(originalRedPeasant, scaleSize);
+		bluePeasant = scaleImage(originalBluePeasant, scaleSize);
 	}
 
 	private BufferedImage scaleImage(BufferedImage before, double scaleSize) {
