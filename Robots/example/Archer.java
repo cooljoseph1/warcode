@@ -2,7 +2,7 @@ package example;
 
 import warcode.WCRobot;
 
-public class Archer extends Robot {
+public class Archer extends RobotHelper {
 
 	public Archer(WCRobot robot) {
 		super(robot);

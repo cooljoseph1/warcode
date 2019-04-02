@@ -20,12 +20,12 @@ public class Map {
 
 	public Map(String mapName) {
 		try {
-			origMap = new String(Files.readAllBytes(Paths.get("Resources/Maps/" + mapName + ".wcm")));
+			origMap = new String(Files.readAllBytes(Paths.get(mapName)));
 
 			int height = 0;
 			int width = 0;
 
-			BufferedReader reader = new BufferedReader(new FileReader("Resources/Maps/" + mapName + ".wcm"));
+			BufferedReader reader = new BufferedReader(new FileReader(mapName));
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				height += 1;
 				width = line.length();
@@ -37,7 +37,7 @@ public class Map {
 
 			passableMap = new Tile[height][width];
 
-			reader = new BufferedReader(new FileReader("Resources/Maps/" + mapName + ".wcm"));
+			reader = new BufferedReader(new FileReader(mapName));
 			int y = 0;
 			for (String line = reader.readLine(); line != null; line = reader.readLine(), y++) {
 				for (int x = 0; x < line.length(); x++) {

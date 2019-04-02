@@ -51,7 +51,7 @@ public class ViewerEngine {
 
 		try {
 
-			BufferedReader reader = new BufferedReader(new FileReader("Replays/" + saveFile + ".wcr"));
+			BufferedReader reader = new BufferedReader(new FileReader(saveFile));
 			winner = Winner.fromString(reader.readLine());
 			turns = Integer.parseInt(reader.readLine());
 			int width = Integer.parseInt(reader.readLine());

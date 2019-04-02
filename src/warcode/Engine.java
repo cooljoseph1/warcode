@@ -1,8 +1,11 @@
 package warcode;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -22,19 +25,34 @@ public class Engine {
 	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
 	// maps the ids to all robots every created
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
+
+	// List of initial castles on the map
 	private LinkedList<Unit> castles = new LinkedList<Unit>();
 
+	// Gold and wood the teams have
 	private int redGold;
 	private int redWood;
 	private int blueGold;
 	private int blueWood;
+
+	// Turn the game is on
 	private int turn = 0;
 
+	// Save method -- may change this
 	private StringJoiner saveInfo = new StringJoiner("\n");
 	private StringJoiner turnActions;
 
+	// End winner. Is not set until after a game is played
 	private Winner winner;
 
+	/**
+	 * Makes an engine class. This engine is what runs a game. Pass the classes for
+	 * the red and blue teams to the engine and then use playGame to play a game.
+	 * 
+	 * @param red
+	 * @param blue
+	 * @throws NoSuchMethodException
+	 */
 	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
 		try {
 			redConstructor = red.getConstructor(Unit.class, Engine.class);
@@ -50,15 +68,22 @@ public class Engine {
 		}
 	}
 
+	/**
+	 * Plays a game on the given map
+	 * 
+	 * @param mapName
+	 * @return
+	 */
 	public Winner playGame(String mapName) {
 
+		// setup the game
 		map = new Map(mapName);
 
 		// Add initial castle locations
 		turnActions = new StringJoiner("; ");
 		for (InitialCastle castleInfo : map.getCastleLocations()) {
 
-			int unitId = makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle, false);
+			makeRobot(castleInfo.getX(), castleInfo.getY(), castleInfo.getTeam(), SPECS.Castle, false);
 		}
 		saveInfo.add(turnActions.toString());
 
@@ -69,7 +94,10 @@ public class Engine {
 		blueGold = SPECS.INITIAL_GOLD;
 		blueWood = SPECS.INITIAL_WOOD;
 
-		// Run game until one wins or turn reaches 1000.
+		// -----------------------------------------------------------------------------------------------------
+		// Run the game
+
+		// Run game until one is eliminated or turn reaches 1000.
 		boolean redWon = false;
 		boolean blueWon = false;
 		turn = 0;
@@ -99,6 +127,7 @@ public class Engine {
 			saveInfo.add(turnActions.toString());
 		}
 
+		// TODO: Add in tiebreaking
 		if (redWon) {
 			winner = Winner.RED;
 		} else if (blueWon) {
@@ -109,17 +138,23 @@ public class Engine {
 		return winner;
 	}
 
+	/**
+	 * Returns the winner of the game
+	 * 
+	 * @return
+	 */
 	public Winner getWinner() {
 		return winner;
 	}
 
 	/**
+	 * Saves the game to the file given
 	 * 
-	 * @param fileLocation
+	 * @param fileName
 	 */
 	public void save(String fileName) {
 		try {
-			FileWriter writer = new FileWriter("Replays/" + fileName + ".wcr");
+			FileWriter writer = new FileWriter(fileName);
 			// save turn, with, height, and then all of the operations
 			writer.write(winner + "\n");
 			writer.write(turn + "\n");
@@ -342,6 +377,17 @@ public class Engine {
 		return idRobotMap.get(id).me;
 	}
 
+	Unit getUnitAtLocation(int x, int y) {
+		for (WCRobot robot : idRobotMap.values()) {
+			Unit unit = robot.me;
+			if (unit.getX() == x && unit.getY() == y) {
+				return unit;
+			}
+		}
+
+		return null;
+	}
+
 	private WCRobot getRobot(int id) {
 		return idRobotMap.get(id);
 	}
@@ -408,21 +454,14 @@ public class Engine {
 	}
 
 	public static void main(String[] args) {
-		ClassLoader classLoader = Engine.class.getClassLoader();
 
-		Class<WCRobot> red;
-		try {
-			red = (Class<WCRobot>) classLoader.loadClass(args[0]);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		// This is for executing from a jar file
+		File jarPath = new File(Engine.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+		String path = jarPath.getParentFile().getAbsolutePath() + "\\";
 
-		Class<WCRobot> blue;
-		try {
-			blue = (Class<WCRobot>) classLoader.loadClass(args[1]);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		Class<WCRobot> red = (Class<WCRobot>) loadClass(path, args[0]);
+		Class<WCRobot> blue = (Class<WCRobot>) loadClass(path, args[1]);
+
 		Engine engine;
 		try {
 			engine = new Engine(red, blue);
@@ -432,7 +471,32 @@ public class Engine {
 
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook(engine, args[3]));
 		System.out.println(engine.playGame(args[2]));
-		// engine.save(args[3]);
+	}
+
+	private static Class<?> loadClass(String localPath, String packagePath) {
+		String path = (localPath + packagePath).replace("/", ".").replace("\\", ".");
+		int lastPart = path.lastIndexOf(".");
+		String packagePart = path.substring(lastPart + 1);
+		String pathPart = path.substring(0, lastPart);
+
+		// Create a File object on the root of the directory containing the class file
+		File file = new File(pathPart.replace(".", "/"));
+
+		try {
+			// Convert File to a URL
+			URL url = file.toURI().toURL(); // file:/c:/myclasses/
+			URL[] urls = new URL[] { url };
+
+			// Create a new class loader with the directory
+			URLClassLoader cl = new URLClassLoader(urls);
+			// Load the class
+			Class<?> c = cl.loadClass(packagePart + "." + "Robot");
+
+			cl.close();
+			return c;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
 

@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 import actions.AttackAction;
-import actions.BuildAction;
 import actions.CollectAction;
 import actions.GiveAction;
 import actions.MineAction;
@@ -19,6 +18,7 @@ import exceptions.GiveException;
 import exceptions.MineException;
 import exceptions.MoveException;
 import exceptions.SignalException;
+import exceptions.VisibilityException;
 
 public abstract class WCRobot {
 	class RunTurn implements Callable<Void> {
@@ -36,8 +36,6 @@ public abstract class WCRobot {
 	public Unit[] visibleUnits;
 	public int[][] visibleUnitMap;
 	public Signal[] signals;
-	public int gold;
-	public int wood;
 	public long time;
 
 	private Engine engine;
@@ -58,7 +56,7 @@ public abstract class WCRobot {
 	 * @param engine
 	 * @param time
 	 * 
-	 *               Time in milliseconds
+	 *               Time in nanoseconds
 	 */
 	WCRobot(Unit me, Engine engine, long time) {
 		this.me = me;
@@ -270,6 +268,9 @@ public abstract class WCRobot {
 		}
 	}
 
+	// --------------------------------------------------------------------------------------------------
+	// Helper methods
+
 	public final Unit[] getVisibleUnits() {
 		return visibleUnits;
 	}
@@ -278,12 +279,33 @@ public abstract class WCRobot {
 		return visibleUnitMap;
 	}
 
-	public final Unit getUnit(int id) {
-		return engine.getUnit(id);
+	public final Unit getUnit(int id) throws VisibilityException {
+		Unit unit = engine.getUnit(id);
+
+		if (!isVisible(unit)) {
+			throw new VisibilityException("Unit is out of range");
+		}
+
+		return unit;
+	}
+
+	public final Unit getUnitAtLocation(int x, int y) {
+		Unit unit = engine.getUnitAtLocation(x, y);
+
+		if (!isVisible(unit)) {
+			throw new VisibilityException("Unit is out of range");
+		}
+
+		return unit;
 	}
 
 	public final boolean isVisible(Unit unit) {
 		int distSquared = Engine.distanceSquared(me, unit);
+		return (distSquared <= this.me.unitType.VISION_RADIUS);
+	}
+
+	public final boolean isVisible(int x, int y) {
+		int distSquared = Engine.distanceSquared(x, y, me.getX(), me.getY());
 		return (distSquared <= this.me.unitType.VISION_RADIUS);
 	}
 
@@ -326,6 +348,12 @@ public abstract class WCRobot {
 		return engine.isOnMap(x, y);
 	}
 
+	/**
+	 * Method to be used by the engine to subtract off the time it has
+	 * 
+	 * @param time
+	 */
+	
 	void subtractTime(long time) {
 		this.time -= time;
 	}
