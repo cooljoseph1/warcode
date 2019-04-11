@@ -16,8 +16,8 @@ import actions.BuildAction;
 import actions.DieAction;
 
 public class Engine {
-	private final Constructor<WCRobot> redConstructor;
-	private final Constructor<WCRobot> blueConstructor;
+	private final String pathToRed;
+	private final String pathToBlue;
 
 	private Map map;
 
@@ -53,19 +53,19 @@ public class Engine {
 	 * @param blue
 	 * @throws NoSuchMethodException
 	 */
-	public Engine(Class<WCRobot> red, Class<WCRobot> blue) throws NoSuchMethodException {
-		try {
-			redConstructor = red.getConstructor(Unit.class, Engine.class);
-		} catch (NoSuchMethodException e) {
-			System.out.println("Red failed to initialize due to a bad constructor.");
-			throw e;
-		}
-		try {
-			blueConstructor = blue.getConstructor(Unit.class, Engine.class);
-		} catch (NoSuchMethodException e) {
-			System.out.println("Blue failed to initialize due to a bad constructor.");
-			throw e;
-		}
+	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
+		this.pathToRed = pathToRed;
+		this.pathToBlue = pathToBlue;
+
+		/*
+		 * try { redConstructor = red.getConstructor(Unit.class, Engine.class); } catch
+		 * (NoSuchMethodException e) {
+		 * System.out.println("Red failed to initialize due to a bad constructor.");
+		 * throw e; } try { blueConstructor = blue.getConstructor(Unit.class,
+		 * Engine.class); } catch (NoSuchMethodException e) {
+		 * System.out.println("Blue failed to initialize due to a bad constructor.");
+		 * throw e; }
+		 */
 	}
 
 	/**
@@ -397,19 +397,22 @@ public class Engine {
 		try {
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
-				robot = redConstructor.newInstance(unit, this);
+				System.out.println(loadRedConstructor());
+				robot = loadRedConstructor().newInstance(unit, this);
 			} else {
-				robot = blueConstructor.newInstance(unit, this);
+				robot = loadBlueConstructor().newInstance(unit, this);
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
 
 		} catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+			System.out.println("caught");
 			if (team == Team.RED) {
 				System.out.println("Red robot failed to initialize");
 			} else {
 				System.out.println("Blue robot failed to initialize");
 			}
 		} finally {
+			System.out.println("In finally");
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
 			// add id to the beginning of the robot queue.
@@ -419,6 +422,56 @@ public class Engine {
 			}
 		}
 	}
+
+	private Constructor<WCRobot> loadRedConstructor() {
+		try {
+			System.out.println("Loading red");
+			System.out.println(pathToRed);
+			System.out.println(loadRobotClass(pathToRed));
+			return (Constructor<WCRobot>) loadRobotClass(pathToRed).getConstructor(Unit.class, Engine.class);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private Constructor<WCRobot> loadBlueConstructor() {
+		try {
+			return (Constructor<WCRobot>) loadRobotClass(pathToBlue).getConstructor(Unit.class, Engine.class);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static Class<?> loadRobotClass(String pathToPackage) {
+		String path = pathToPackage.replace(".", "/").replace("\\", "/");
+		System.out.println(path);
+		int lastPart = path.lastIndexOf("/");
+		String packagePart = path.substring(lastPart + 1);
+		String pathPart = path.substring(0, lastPart);
+
+		File file = new File(pathPart);
+
+		try {
+
+			URL url = file.toURI().toURL();
+			URL[] urls = new URL[] { url };
+
+			// Create a new class loader with the directory
+			
+			URLClassLoader cl = new URLClassLoader(urls, new CustomLoader(Engine.class.getClassLoader()));
+			// Load the class
+			Class<?> c = cl.loadClass(packagePart + "." + "Robot");
+
+			cl.close();
+			return c;
+		} catch (Exception e) {
+			System.out.println("exception!!!");
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
 
 	private void removeRobot(int id) {
 		// if it is a castle, remove it from castles
@@ -459,12 +512,9 @@ public class Engine {
 		File jarPath = new File(Engine.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 		String path = jarPath.getParentFile().getAbsolutePath() + "\\";
 
-		Class<WCRobot> red = (Class<WCRobot>) loadClass(path, args[0]);
-		Class<WCRobot> blue = (Class<WCRobot>) loadClass(path, args[1]);
-
 		Engine engine;
 		try {
-			engine = new Engine(red, blue);
+			engine = new Engine(path + args[0], path + args[1]);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
@@ -473,31 +523,6 @@ public class Engine {
 		System.out.println(engine.playGame(args[2]));
 	}
 
-	private static Class<?> loadClass(String localPath, String packagePath) {
-		String path = (localPath + packagePath).replace("/", ".").replace("\\", ".");
-		int lastPart = path.lastIndexOf(".");
-		String packagePart = path.substring(lastPart + 1);
-		String pathPart = path.substring(0, lastPart);
-
-		// Create a File object on the root of the directory containing the class file
-		File file = new File(pathPart.replace(".", "/"));
-
-		try {
-			// Convert File to a URL
-			URL url = file.toURI().toURL(); // file:/c:/myclasses/
-			URL[] urls = new URL[] { url };
-
-			// Create a new class loader with the directory
-			URLClassLoader cl = new URLClassLoader(urls);
-			// Load the class
-			Class<?> c = cl.loadClass(packagePart + "." + "Robot");
-
-			cl.close();
-			return c;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 }
 
 class ShutdownHook extends Thread {
@@ -515,5 +540,11 @@ class ShutdownHook extends Thread {
 		System.out.println("Saving...");
 		engine.save(saveFile);
 		System.out.println("Saved game nicely.");
+	}
+}
+
+class CustomLoader extends ClassLoader {
+	public CustomLoader(ClassLoader parent) {
+		super(parent);
 	}
 }
