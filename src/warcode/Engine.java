@@ -3,6 +3,7 @@ package warcode;
 import java.io.File;
 import java.io.FileWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,12 +15,15 @@ import java.util.StringJoiner;
 import actions.Action;
 import actions.BuildAction;
 import actions.DieAction;
+import exceptions.GameException;
 
 public class Engine {
-	private final String pathToRed;
-	private final String pathToBlue;
-
+	
+	private final Constructor<WCRobot> redConstructor;
+	private final Constructor<WCRobot> blueConstructor;
+	
 	private Map map;
+	
 
 	// stores a list of all alive units, in order of the turn queue
 	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
@@ -54,18 +58,8 @@ public class Engine {
 	 * @throws NoSuchMethodException
 	 */
 	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
-		this.pathToRed = pathToRed;
-		this.pathToBlue = pathToBlue;
-
-		/*
-		 * try { redConstructor = red.getConstructor(Unit.class, Engine.class); } catch
-		 * (NoSuchMethodException e) {
-		 * System.out.println("Red failed to initialize due to a bad constructor.");
-		 * throw e; } try { blueConstructor = blue.getConstructor(Unit.class,
-		 * Engine.class); } catch (NoSuchMethodException e) {
-		 * System.out.println("Blue failed to initialize due to a bad constructor.");
-		 * throw e; }
-		 */
+		redConstructor = loadConstructor(pathToRed);
+		blueConstructor = loadConstructor(pathToBlue);
 	}
 
 	/**
@@ -397,10 +391,9 @@ public class Engine {
 		try {
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
-				System.out.println(loadRedConstructor());
-				robot = loadRedConstructor().newInstance(unit, this);
+				robot = redConstructor.newInstance(unit, this);
 			} else {
-				robot = loadBlueConstructor().newInstance(unit, this);
+				robot = redConstructor.newInstance(unit, this);
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
 
@@ -412,7 +405,6 @@ public class Engine {
 				System.out.println("Blue robot failed to initialize");
 			}
 		} finally {
-			System.out.println("In finally");
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
 			// add id to the beginning of the robot queue.
@@ -423,28 +415,26 @@ public class Engine {
 		}
 	}
 
-	private Constructor<WCRobot> loadRedConstructor() {
+	private Constructor<WCRobot> loadConstructor(String pathToClass) {
+		Class<WCRobot> robotClass = loadRobotClass(pathToClass);
+		
+		//Get all the static variables
+		Field[] fields = robotClass.getDeclaredFields();
+		if(fields.length > 0) {
+			throw new GameException("Error in loading " + pathToClass + ".  Static variables are not allowed.");
+		}
+		
+		Constructor<WCRobot> constructor = null;
 		try {
-			System.out.println("Loading red");
-			System.out.println(pathToRed);
-			System.out.println(loadRobotClass(pathToRed));
-			return (Constructor<WCRobot>) loadRobotClass(pathToRed).getConstructor(Unit.class, Engine.class);
+			return (Constructor<WCRobot>) robotClass.getConstructor(Unit.class, Engine.class);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private Constructor<WCRobot> loadBlueConstructor() {
-		try {
-			return (Constructor<WCRobot>) loadRobotClass(pathToBlue).getConstructor(Unit.class, Engine.class);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static Class<?> loadRobotClass(String pathToPackage) {
+	private static Class<WCRobot> loadRobotClass(String pathToPackage) {
 		String path = pathToPackage.replace(".", "/").replace("\\", "/");
-		System.out.println(path);
+		
 		int lastPart = path.lastIndexOf("/");
 		String packagePart = path.substring(lastPart + 1);
 		String pathPart = path.substring(0, lastPart);
@@ -460,12 +450,12 @@ public class Engine {
 			
 			URLClassLoader cl = new URLClassLoader(urls, new CustomLoader(Engine.class.getClassLoader()));
 			// Load the class
-			Class<?> c = cl.loadClass(packagePart + "." + "Robot");
+			Class<WCRobot> c = (Class<WCRobot>) cl.loadClass(packagePart + "." + "Robot");
 
 			cl.close();
+			
 			return c;
 		} catch (Exception e) {
-			System.out.println("exception!!!");
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
