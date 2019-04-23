@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
@@ -18,12 +19,11 @@ import actions.DieAction;
 import exceptions.GameException;
 
 public class Engine {
-	
+
 	private final Constructor<WCRobot> redConstructor;
 	private final Constructor<WCRobot> blueConstructor;
-	
+
 	private Map map;
-	
 
 	// stores a list of all alive units, in order of the turn queue
 	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
@@ -58,8 +58,17 @@ public class Engine {
 	 * @throws NoSuchMethodException
 	 */
 	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
-		redConstructor = loadConstructor(pathToRed);
-		blueConstructor = loadConstructor(pathToBlue);
+		try {
+			redConstructor = loadConstructor(pathToRed);
+		} catch (GameException e) {
+			throw new GameException("Failure loading red class", e);
+		}
+
+		try {
+			blueConstructor = loadConstructor(pathToBlue);
+		} catch (GameException e) {
+			throw new GameException("Failure loading blue class", e);
+		}
 	}
 
 	/**
@@ -417,24 +426,47 @@ public class Engine {
 
 	private Constructor<WCRobot> loadConstructor(String pathToClass) {
 		Class<WCRobot> robotClass = loadRobotClass(pathToClass);
-		
-		//Get all the static variables
+
+		// Get all variables
 		Field[] fields = robotClass.getDeclaredFields();
-		if(fields.length > 0) {
-			throw new GameException("Error in loading " + pathToClass + ".  Static variables are not allowed.");
+
+		// Make sure the robot isn't using static variables
+		for (Field field : fields) {
+			if (Modifier.isStatic(field.getModifiers()) && !Modifier.isFinal(field.getModifiers())) {
+				// check to see if the variable is in the switch table, as these are declared
+				// static, but we want
+				// switch statements to be allowed
+				System.out.println(field);
+				
+				field.setAccessible(true);
+				
+				Field modifiers = null;
+				try {
+					modifiers = Field.class.getDeclaredField("modifiers");
+					modifiers.setAccessible(true);
+					modifiers.setInt(field, field.getModifiers() | Modifier.FINAL);
+				} catch (ReflectiveOperationException e) {
+					throw new RuntimeException(e);
+				}
+
+				// System.out.println(field.getName());
+				if (field.getName().length() < 14 || !field.getName().substring(0, 14).equals("$SWITCH_TABLE$")) {
+					System.out.println("WARNING: Static variables will become final");
+				}
+			}
 		}
-		
+
 		Constructor<WCRobot> constructor = null;
 		try {
 			return (Constructor<WCRobot>) robotClass.getConstructor(Unit.class, Engine.class);
 		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
+			throw new GameException(e);
 		}
 	}
 
 	private static Class<WCRobot> loadRobotClass(String pathToPackage) {
 		String path = pathToPackage.replace(".", "/").replace("\\", "/");
-		
+
 		int lastPart = path.lastIndexOf("/");
 		String packagePart = path.substring(lastPart + 1);
 		String pathPart = path.substring(0, lastPart);
@@ -447,21 +479,19 @@ public class Engine {
 			URL[] urls = new URL[] { url };
 
 			// Create a new class loader with the directory
-			
+
 			URLClassLoader cl = new URLClassLoader(urls, new CustomLoader(Engine.class.getClassLoader()));
 			// Load the class
 			Class<WCRobot> c = (Class<WCRobot>) cl.loadClass(packagePart + "." + "Robot");
 
 			cl.close();
-			
+
 			return c;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
-	
-	
 
 	private void removeRobot(int id) {
 		// if it is a castle, remove it from castles
