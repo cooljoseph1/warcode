@@ -1,7 +1,10 @@
 package warcode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -20,8 +23,8 @@ import exceptions.GameException;
 
 public class Engine {
 
-	private final Constructor<WCRobot> redConstructor;
-	private final Constructor<WCRobot> blueConstructor;
+	private final String redPath;
+	private final String bluePath;
 
 	private Map map;
 
@@ -58,17 +61,8 @@ public class Engine {
 	 * @throws NoSuchMethodException
 	 */
 	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
-		try {
-			redConstructor = loadConstructor(pathToRed);
-		} catch (GameException e) {
-			throw new GameException("Failure loading red class", e);
-		}
-
-		try {
-			blueConstructor = loadConstructor(pathToBlue);
-		} catch (GameException e) {
-			throw new GameException("Failure loading blue class", e);
-		}
+		redPath = pathToRed;
+		bluePath = pathToBlue;
 	}
 
 	/**
@@ -400,19 +394,20 @@ public class Engine {
 		try {
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
-				robot = redConstructor.newInstance(unit, this);
+				robot = constructRobot(redPath, unit, this);
 			} else {
-				robot = redConstructor.newInstance(unit, this);
+				robot = constructRobot(bluePath, unit, this);
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
 
-		} catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-			System.out.println("caught");
+		} catch (Exception e) {
 			if (team == Team.RED) {
 				System.out.println("Red robot failed to initialize");
 			} else {
 				System.out.println("Blue robot failed to initialize");
 			}
+
+			e.printStackTrace();
 		} finally {
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
@@ -421,75 +416,6 @@ public class Engine {
 			if (robot.me.unitType == SPECS.Castle) {
 				castles.add(robot.me);
 			}
-		}
-	}
-
-	private Constructor<WCRobot> loadConstructor(String pathToClass) {
-		Class<WCRobot> robotClass = loadRobotClass(pathToClass);
-
-		// Get all variables
-		Field[] fields = robotClass.getDeclaredFields();
-
-		// Make sure the robot isn't using static variables
-		for (Field field : fields) {
-			if (Modifier.isStatic(field.getModifiers()) && !Modifier.isFinal(field.getModifiers())) {
-				// check to see if the variable is in the switch table, as these are declared
-				// static, but we want
-				// switch statements to be allowed
-				System.out.println(field);
-				
-				field.setAccessible(true);
-				
-				Field modifiers = null;
-				try {
-					modifiers = Field.class.getDeclaredField("modifiers");
-					modifiers.setAccessible(true);
-					modifiers.setInt(field, field.getModifiers() | Modifier.FINAL);
-				} catch (ReflectiveOperationException e) {
-					throw new RuntimeException(e);
-				}
-
-				// System.out.println(field.getName());
-				if (field.getName().length() < 14 || !field.getName().substring(0, 14).equals("$SWITCH_TABLE$")) {
-					System.out.println("WARNING: Static variables will become final");
-				}
-			}
-		}
-
-		Constructor<WCRobot> constructor = null;
-		try {
-			return (Constructor<WCRobot>) robotClass.getConstructor(Unit.class, Engine.class);
-		} catch (NoSuchMethodException e) {
-			throw new GameException(e);
-		}
-	}
-
-	private static Class<WCRobot> loadRobotClass(String pathToPackage) {
-		String path = pathToPackage.replace(".", "/").replace("\\", "/");
-
-		int lastPart = path.lastIndexOf("/");
-		String packagePart = path.substring(lastPart + 1);
-		String pathPart = path.substring(0, lastPart);
-
-		File file = new File(pathPart);
-
-		try {
-
-			URL url = file.toURI().toURL();
-			URL[] urls = new URL[] { url };
-
-			// Create a new class loader with the directory
-
-			URLClassLoader cl = new URLClassLoader(urls, new CustomLoader(Engine.class.getClassLoader()));
-			// Load the class
-			Class<WCRobot> c = (Class<WCRobot>) cl.loadClass(packagePart + "." + "Robot");
-
-			cl.close();
-
-			return c;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -526,15 +452,15 @@ public class Engine {
 		return dx * dx + dy * dy;
 	}
 
-	public static void main(String[] args) {
+	private static WCRobot constructRobot(String pathToClass, Unit unit, Engine engine) {
+		return new RobotCreater(pathToClass).createRobot(unit, engine);
+	}
 
-		// This is for executing from a jar file
-		File jarPath = new File(Engine.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-		String path = jarPath.getParentFile().getAbsolutePath() + "\\";
+	public static void main(String[] args) {
 
 		Engine engine;
 		try {
-			engine = new Engine(path + args[0], path + args[1]);
+			engine = new Engine(args[0], args[1]);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
@@ -563,8 +489,83 @@ class ShutdownHook extends Thread {
 	}
 }
 
-class CustomLoader extends ClassLoader {
-	public CustomLoader(ClassLoader parent) {
-		super(parent);
+class CustomClassLoader extends ClassLoader {
+
+	public CustomClassLoader(ClassLoader cl) {
+		super(cl);
 	}
+
+	@Override
+	public Class<?> findClass(String name) throws ClassNotFoundException {
+		byte[] b = loadClassFromFile(name);
+		return defineClass(name, b, 0, b.length);
+	}
+
+	private byte[] loadClassFromFile(String fileName) {
+		InputStream inputStream = getClass().getClassLoader()
+				.getResourceAsStream(fileName.replace('.', File.separatorChar) + ".class");
+		byte[] buffer;
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		int nextValue = 0;
+		try {
+			while ((nextValue = inputStream.read()) != -1) {
+				byteStream.write(nextValue);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		buffer = byteStream.toByteArray();
+		return buffer;
+	}
+}
+
+class RobotCreater {
+
+	private Class<?> unitClass = null;
+	private Class<?> engineClass = null;
+	private Class<?> robotClass = null;
+	private Constructor<WCRobot> constructor = null;
+
+	public RobotCreater(String pathToClass) {
+		CustomClassLoader classLoader = createClassLoader(pathToClass);
+
+		try {
+			this.unitClass = classLoader.loadClass("warcode.Unit");
+			this.engineClass = classLoader.loadClass("warcode.Engine");
+			this.robotClass = (Class<WCRobot>) classLoader.loadClass(pathToClass + ".Robot");
+		} catch (ClassNotFoundException e) {
+			throw new GameException("Class not found", e);
+		}
+
+		try {
+			this.constructor = (Constructor<WCRobot>) robotClass.getConstructor(unitClass, engineClass);
+		} catch (NoSuchMethodException e) {
+			throw new GameException(e);
+		}
+	}
+
+	private static CustomClassLoader createClassLoader(String pathToPackage) {
+		try {
+
+			// Create a new class loader with the directory
+
+			CustomClassLoader cl = new CustomClassLoader(ClassLoader.getSystemClassLoader().getParent());
+
+			return cl;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
+	public WCRobot createRobot(Unit unit, Engine engine) {
+		try {
+			return constructor.newInstance(unitClass.cast(unit), engineClass.cast(engine));
+		} catch (Exception e) {
+			throw new GameException(e);
+		}
+
+	}
+
 }
