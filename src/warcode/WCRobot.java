@@ -347,6 +347,10 @@ public abstract class WCRobot {
 	public final boolean isOnMap(int x, int y) {
 		return engine.isOnMap(x, y);
 	}
+	
+	public final boolean isAlive() {
+		return me.isAlive();
+	}
 
 	/**
 	 * Method to be used by the engine to subtract off the time it has

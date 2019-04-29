@@ -2,7 +2,7 @@ package warcode;
 
 import java.io.FileDescriptor;
 
-public class WarcodeSecurityManager extends SecurityManager {
+public class WCRobotSecurityManager extends SecurityManager {
 	@Override
 	public void checkRead(FileDescriptor filedescriptor) {
 		throw new SecurityException("Sorry, you are not allowed to read files.");

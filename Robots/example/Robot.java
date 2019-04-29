@@ -43,6 +43,7 @@ public class Robot extends WCRobot {
 	// You must override the turn method in your bot.
 	@Override
 	public void turn() {
+		System.out.println("I am going");
 		robot.turn();
 	}
 }

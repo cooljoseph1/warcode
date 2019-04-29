@@ -18,7 +18,7 @@ public class Unit {
 	private boolean given = true;
 	private boolean built = true;
 	private boolean signalled = true;
-	
+
 	private boolean turnTaken = false;
 
 	/**
@@ -45,6 +45,8 @@ public class Unit {
 		this.team = team;
 		this.x = x;
 		this.y = y;
+
+		this.health = unitType.INITIAL_HEALTH;
 	}
 
 	void setPos(int x, int y) {
@@ -142,7 +144,7 @@ public class Unit {
 	void setBuilt(boolean state) {
 		built = state;
 	}
-	
+
 	void setTurnTaken(boolean state) {
 		turnTaken = state;
 	}
@@ -170,7 +172,7 @@ public class Unit {
 	public boolean hasBuilt() {
 		return built;
 	}
-	
+
 	public boolean hasTakenTurn() {
 		return turnTaken;
 	}
@@ -205,5 +207,9 @@ public class Unit {
 
 	public Team getTeam() {
 		return team;
+	}
+
+	public boolean isAlive() {
+		return health > 0;
 	}
 }

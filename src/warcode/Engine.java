@@ -23,13 +23,16 @@ import exceptions.GameException;
 
 public class Engine {
 
-	private final String redPath;
-	private final String bluePath;
+	private final Constructor<WCRobot> redConstructor;
+	private final Constructor<WCRobot> blueConstructor;
 
 	private Map map;
 
 	// stores a list of all alive units, in order of the turn queue
 	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
+
+	// maps the ids to the threads that hold the robots
+	private HashMap<Integer, SandboxThread> idThreadMap = new HashMap<Integer, SandboxThread>();
 	// maps the ids to all robots every created
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
 
@@ -61,8 +64,19 @@ public class Engine {
 	 * @throws NoSuchMethodException
 	 */
 	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
-		redPath = pathToRed;
-		bluePath = pathToBlue;
+		CustomClassLoader cl = new CustomClassLoader(ClassLoader.getSystemClassLoader());
+
+		Class<WCRobot> redClass = null;
+		Class<WCRobot> blueClass = null;
+		try {
+			redClass = (Class<WCRobot>) cl.loadClass(pathToRed);
+			blueClass = (Class<WCRobot>) cl.loadClass(pathToBlue);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+
+		redConstructor = redClass.getConstructor(Unit.class, Engine.class);
+		blueConstructor = blueClass.getConstructor(Unit.class, Engine.class);
 	}
 
 	/**
@@ -116,7 +130,10 @@ public class Engine {
 
 				// let the robot take a turn
 				robot.me.setTurnTaken(false);
-				robot._do_turn();
+				SandboxThread thread = getSandboxThread(id);
+				synchronized (thread.pauseLock) {
+					thread.pauseLock.notifyAll();
+				}
 			}
 
 			turn++;
@@ -389,14 +406,21 @@ public class Engine {
 		return idRobotMap.get(id);
 	}
 
+	private SandboxThread getSandboxThread(int id) {
+		return idThreadMap.get(id);
+	}
+
 	private void addRobot(Unit unit, Team team) {
 		WCRobot robot = null;
+		SandboxThread thread = null;
 		try {
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
-				robot = constructRobot(redPath, unit, this);
+				thread = constructRobotThread(redConstructor, unit, this);
+				robot = thread.robot;
 			} else {
-				robot = constructRobot(bluePath, unit, this);
+				thread = constructRobotThread(redConstructor, unit, this);
+				robot = thread.robot;
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
 
@@ -409,6 +433,8 @@ public class Engine {
 
 			e.printStackTrace();
 		} finally {
+			// add thread to the id-thread hashmap
+			idThreadMap.put(thread.robot.me.id, thread);
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
 			// add id to the beginning of the robot queue.
@@ -452,8 +478,9 @@ public class Engine {
 		return dx * dx + dy * dy;
 	}
 
-	private static WCRobot constructRobot(String pathToClass, Unit unit, Engine engine) {
-		return new RobotCreater(pathToClass).createRobot(unit, engine);
+	private static SandboxThread constructRobotThread(Constructor<WCRobot> constructor, Unit unit, Engine engine) {
+		SandboxThread thread = new SandboxThread(constructor, unit, engine);
+		return thread;
 	}
 
 	public static void main(String[] args) {
@@ -487,85 +514,4 @@ class ShutdownHook extends Thread {
 		engine.save(saveFile);
 		System.out.println("Saved game nicely.");
 	}
-}
-
-class CustomClassLoader extends ClassLoader {
-
-	public CustomClassLoader(ClassLoader cl) {
-		super(cl);
-	}
-
-	@Override
-	public Class<?> findClass(String name) throws ClassNotFoundException {
-		byte[] b = loadClassFromFile(name);
-		return defineClass(name, b, 0, b.length);
-	}
-
-	private byte[] loadClassFromFile(String fileName) {
-		InputStream inputStream = getClass().getClassLoader()
-				.getResourceAsStream(fileName.replace('.', File.separatorChar) + ".class");
-		byte[] buffer;
-		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		int nextValue = 0;
-		try {
-			while ((nextValue = inputStream.read()) != -1) {
-				byteStream.write(nextValue);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		buffer = byteStream.toByteArray();
-		return buffer;
-	}
-}
-
-class RobotCreater {
-
-	private Class<?> unitClass = null;
-	private Class<?> engineClass = null;
-	private Class<?> robotClass = null;
-	private Constructor<WCRobot> constructor = null;
-
-	public RobotCreater(String pathToClass) {
-		CustomClassLoader classLoader = createClassLoader(pathToClass);
-
-		try {
-			this.unitClass = classLoader.loadClass("warcode.Unit");
-			this.engineClass = classLoader.loadClass("warcode.Engine");
-			this.robotClass = (Class<WCRobot>) classLoader.loadClass(pathToClass + ".Robot");
-		} catch (ClassNotFoundException e) {
-			throw new GameException("Class not found", e);
-		}
-
-		try {
-			this.constructor = (Constructor<WCRobot>) robotClass.getConstructor(unitClass, engineClass);
-		} catch (NoSuchMethodException e) {
-			throw new GameException(e);
-		}
-	}
-
-	private static CustomClassLoader createClassLoader(String pathToPackage) {
-		try {
-
-			// Create a new class loader with the directory
-
-			CustomClassLoader cl = new CustomClassLoader(ClassLoader.getSystemClassLoader().getParent());
-
-			return cl;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-	}
-
-	public WCRobot createRobot(Unit unit, Engine engine) {
-		try {
-			return constructor.newInstance(unitClass.cast(unit), engineClass.cast(engine));
-		} catch (Exception e) {
-			throw new GameException(e);
-		}
-
-	}
-
 }
