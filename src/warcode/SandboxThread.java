@@ -9,8 +9,9 @@ public class SandboxThread extends Thread {
 	private final Constructor<WCRobot> constructor;
 	private final Unit unit;
 	private final Engine engine;
-	
+
 	public final Object pauseLock = new Object();
+	private boolean paused;
 
 	WCRobot robot;
 
@@ -18,7 +19,7 @@ public class SandboxThread extends Thread {
 		this.constructor = constructor;
 		this.unit = unit;
 		this.engine = engine;
-		
+
 		run();
 	}
 
@@ -28,20 +29,38 @@ public class SandboxThread extends Thread {
 		} catch (Exception e) {
 			throw new GameException("Robot failed to initialize");
 		}
+
 		while (robot.isAlive()) {
-			try {
-				synchronized (pauseLock) {
-					System.out.println("paused");
-					wait();
+			paused = true;
+
+			// Wait for engine to let us know it is this robot's turn
+			while (paused) {
+				try {
+					synchronized (pauseLock) {
+						System.out.println("paused");
+						pauseLock.wait();
+					}
+				} catch (InterruptedException e) {
+					return;
 				}
-			} catch (InterruptedException e) {
-				return;
 			}
+
+			// run the turn
 
 			robot._do_turn();
 
 		}
 
+	}
+
+	public void setPaused(boolean bool) {
+		paused = bool;
+	}
+
+	public synchronized void awaken() {
+		System.out.println(paused);
+		paused = false;
+		pauseLock.notifyAll();
 	}
 
 }

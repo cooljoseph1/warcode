@@ -131,9 +131,7 @@ public class Engine {
 				// let the robot take a turn
 				robot.me.setTurnTaken(false);
 				SandboxThread thread = getSandboxThread(id);
-				synchronized (thread.pauseLock) {
-					thread.pauseLock.notifyAll();
-				}
+				thread.awaken();
 			}
 
 			turn++;
