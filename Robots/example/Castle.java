@@ -4,7 +4,7 @@ import warcode.SPECS;
 import warcode.WCRobot;
 
 public class Castle extends RobotHelper {
-	private final int[][] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 },
+	private final static int[][] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 },
 			{ 1, -1 } };
 
 	private int peasantsBuilt = 0;

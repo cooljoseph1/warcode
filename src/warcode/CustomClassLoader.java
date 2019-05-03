@@ -4,11 +4,34 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+import exceptions.GameException;
 
 public class CustomClassLoader extends ClassLoader {
 
 	public CustomClassLoader(ClassLoader cl) {
 		super(cl);
+	}
+
+	@Override
+	public Class<?> loadClass(String path) throws ClassNotFoundException {
+		Class<?> c = super.loadClass(path);
+		Field[] variables = c.getDeclaredFields();
+		for (Field variable : variables) {
+			int modifiers = variable.getModifiers();
+			if (Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers) && !variable.isSynthetic()) {
+				// All static variables must either be final or created by the compiler
+				// (synthetic)
+
+				throw new GameException(
+						"Static variables are not allowed unless they are final:  " + variable.getName());
+			}
+		}
+
+		return c;
+
 	}
 
 	@Override

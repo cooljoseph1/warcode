@@ -1,16 +1,7 @@
 package warcode;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,7 +10,6 @@ import java.util.StringJoiner;
 import actions.Action;
 import actions.BuildAction;
 import actions.DieAction;
-import exceptions.GameException;
 
 public class Engine {
 
@@ -31,8 +21,6 @@ public class Engine {
 	// stores a list of all alive units, in order of the turn queue
 	private LinkedList<Integer> aliveIdQueue = new LinkedList<Integer>();
 
-	// maps the ids to the threads that hold the robots
-	private HashMap<Integer, SandboxThread> idThreadMap = new HashMap<Integer, SandboxThread>();
 	// maps the ids to all robots every created
 	private HashMap<Integer, WCRobot> idRobotMap = new HashMap<Integer, WCRobot>();
 
@@ -64,6 +52,7 @@ public class Engine {
 	 * @throws NoSuchMethodException
 	 */
 	public Engine(String pathToRed, String pathToBlue) throws NoSuchMethodException {
+
 		CustomClassLoader cl = new CustomClassLoader(ClassLoader.getSystemClassLoader());
 
 		Class<WCRobot> redClass = null;
@@ -130,8 +119,7 @@ public class Engine {
 
 				// let the robot take a turn
 				robot.me.setTurnTaken(false);
-				SandboxThread thread = getSandboxThread(id);
-				thread.awaken();
+				robot._do_turn();
 			}
 
 			turn++;
@@ -404,21 +392,14 @@ public class Engine {
 		return idRobotMap.get(id);
 	}
 
-	private SandboxThread getSandboxThread(int id) {
-		return idThreadMap.get(id);
-	}
-
 	private void addRobot(Unit unit, Team team) {
 		WCRobot robot = null;
-		SandboxThread thread = null;
 		try {
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
-				thread = constructRobotThread(redConstructor, unit, this);
-				robot = thread.robot;
+				robot = redConstructor.newInstance(unit, this);
 			} else {
-				thread = constructRobotThread(redConstructor, unit, this);
-				robot = thread.robot;
+				robot = blueConstructor.newInstance(unit, this);
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
 
@@ -431,8 +412,6 @@ public class Engine {
 
 			e.printStackTrace();
 		} finally {
-			// add thread to the id-thread hashmap
-			idThreadMap.put(thread.robot.me.id, thread);
 			// add robot to the id-robot hashmap
 			idRobotMap.put(robot.me.id, robot);
 			// add id to the beginning of the robot queue.
@@ -474,11 +453,6 @@ public class Engine {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return dx * dx + dy * dy;
-	}
-
-	private static SandboxThread constructRobotThread(Constructor<WCRobot> constructor, Unit unit, Engine engine) {
-		SandboxThread thread = new SandboxThread(constructor, unit, engine);
-		return thread;
 	}
 
 	public static void main(String[] args) {

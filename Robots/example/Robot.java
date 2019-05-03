@@ -2,13 +2,14 @@ package example;
 
 import warcode.Engine;
 import warcode.Unit;
+import warcode.UnitType;
 import warcode.WCRobot;
 
 public class Robot extends WCRobot {
 
 	private final RobotHelper robot;
 
-	private static int robotCount = 1;
+	private static final int robotCount = 1;
 
 	// If you want to do anything on initialization, override the constructor
 	public Robot(Unit unit, Engine engine) {
@@ -16,7 +17,6 @@ public class Robot extends WCRobot {
 		super(unit, engine);
 
 		System.out.println("I am robot " + robotCount);
-		robotCount++;
 
 		switch (unit.unitType) {
 		case CASTLE:
@@ -43,7 +43,6 @@ public class Robot extends WCRobot {
 	// You must override the turn method in your bot.
 	@Override
 	public void turn() {
-		System.out.println("I am going");
 		robot.turn();
 	}
 }

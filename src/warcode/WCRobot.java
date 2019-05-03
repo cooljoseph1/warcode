@@ -40,7 +40,7 @@ public abstract class WCRobot {
 
 	private Engine engine;
 
-	private RunTurn runTurn;
+	private RunTurn runTurn = new RunTurn();
 
 	public WCRobot() {
 
@@ -62,11 +62,15 @@ public abstract class WCRobot {
 		this.me = me;
 		this.engine = engine;
 		this.time = time;
-		this.runTurn = new RunTurn();
 
 	}
 
 	void _do_turn() {
+		
+		//Kill the robot if it supposed to be dead
+		if (!me.isAlive()) {
+			engine.kill(me.id);
+		}
 
 		// Make sure the robot only takes one turn per round
 		if (me.hasTakenTurn()) {
