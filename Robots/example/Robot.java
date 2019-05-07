@@ -2,7 +2,6 @@ package example;
 
 import warcode.Engine;
 import warcode.Unit;
-import warcode.UnitType;
 import warcode.WCRobot;
 
 public class Robot extends WCRobot {

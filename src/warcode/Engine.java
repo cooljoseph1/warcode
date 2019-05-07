@@ -456,14 +456,12 @@ public class Engine {
 	}
 
 	public static void main(String[] args) {
-
 		Engine engine;
 		try {
 			engine = new Engine(args[0], args[1]);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
-
 		Runtime.getRuntime().addShutdownHook(new ShutdownHook(engine, args[3]));
 		System.out.println(engine.playGame(args[2]));
 	}
