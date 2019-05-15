@@ -356,6 +356,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		zoomX = 0;
 		zoomY = 0;
 		scaleImages();
+		turnSlider.setMaximum(engine.getTurns()+1);
 
 		repaint();
 	}

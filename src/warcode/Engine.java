@@ -103,10 +103,10 @@ public class Engine {
 		boolean redWon = false;
 		boolean blueWon = false;
 		turn = 0;
-		
+
 		// disallow the robots from running stuff
 		setPermissions(false);
-		
+
 		while (!redWon && !blueWon && turn < 1000) {
 			// string joiner of the operations that occurred in the turn.
 			turnActions = new StringJoiner("; ");
@@ -116,6 +116,9 @@ public class Engine {
 
 			for (int id : new LinkedList<Integer>(aliveIdQueue)) {
 				WCRobot robot = getRobot(id);
+				if (robot == null) {
+					continue;
+				}
 				if (robot.me.team == Team.RED) {
 					blueWon = false;
 				} else {

@@ -19,7 +19,7 @@ public class Castle extends RobotHelper {
 	public void turn() {
 
 		// If the castle has built fewer than 6 peasants, first try to build a peasant
-		if (peasantsBuilt < 6 && robot.getGold() >= SPECS.Peasant.CONSTRUCTION_GOLD
+		if (peasantsBuilt < 0 && robot.getGold() >= SPECS.Peasant.CONSTRUCTION_GOLD
 				&& robot.getWood() >= SPECS.Peasant.CONSTRUCTION_WOOD) {
 			// Check all directions to see if they are open
 			for (int[] direction : directions) {
@@ -38,8 +38,10 @@ public class Castle extends RobotHelper {
 			}
 		}
 
+		System.out.println("I have " + robot.getGold() + " gold and " + robot.getWood() + " wood.");
+		
 		// Build a knight if it can
-		if (robot.getGold() >= SPECS.Knight.CONSTRUCTION_GOLD && robot.getWood() >= SPECS.Knight.CONSTRUCTION_WOOD) {
+		if (robot.getGold() >= SPECS.Archer.CONSTRUCTION_GOLD && robot.getWood() >= SPECS.Archer.CONSTRUCTION_WOOD) {
 			// Check all directions to see if they are open
 			for (int[] direction : directions) {
 				int x = robot.me.getX() + direction[0];
@@ -50,7 +52,7 @@ public class Castle extends RobotHelper {
 				// when checking if the location is open.
 				if (robot.isOnMap(x, y) && robot.isOpen(x, y)) {
 					// If the location is open, build a knight
-					robot.buildUnit(x, y, SPECS.Knight);
+					robot.buildUnit(x, y, SPECS.Archer);
 					return;
 				}
 			}

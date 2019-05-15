@@ -149,35 +149,35 @@ public class Unit {
 		turnTaken = state;
 	}
 
-	public boolean hasMoved() {
+	boolean hasMoved() {
 		return moved;
 	}
 
-	public boolean hasGathered() {
+	boolean hasGathered() {
 		return gathered;
 	}
 
-	public boolean hasGiven() {
+	boolean hasGiven() {
 		return given;
 	}
 
-	public boolean hasAttakced() {
+	boolean hasAttakced() {
 		return attacked;
 	}
 
-	public boolean hasSignalled() {
+	boolean hasSignalled() {
 		return signalled;
 	}
 
-	public boolean hasBuilt() {
+	boolean hasBuilt() {
 		return built;
 	}
 
-	public boolean hasTakenTurn() {
+	boolean hasTakenTurn() {
 		return turnTaken;
 	}
 
-	public int getWood() {
+	int getWood() {
 		return wood;
 	}
 

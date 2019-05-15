@@ -21,6 +21,6 @@ public final class SPECS {
 	public static final long INCREMENT_TIME = 5000000; // time in nanoseconds - 5 milliseconds
 
 	public static final int INITIAL_GOLD = 500;
-	public static final int INITIAL_WOOD = 0;
+	public static final int INITIAL_WOOD = 500;
 
 }

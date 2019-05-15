@@ -65,7 +65,7 @@ public class ViewerEngine {
 			map = new ViewerMap(mapRows, width, height);
 
 			int turn = 0;
-			turnActions = new LinkedList[turns];
+			turnActions = new LinkedList[turns+1];
 			for (String line = reader.readLine(); line != null; line = reader.readLine(), turn++) {
 				turnActions[turn] = new LinkedList<Action>();
 				for (String action : line.split("; ")) {
