@@ -16,6 +16,8 @@ public class Engine {
 	private final Constructor<WCRobot> redConstructor;
 	private final Constructor<WCRobot> blueConstructor;
 
+	private final static WarcodeSecurityManager securityManager = new WarcodeSecurityManager();
+
 	private Map map;
 
 	// stores a list of all alive units, in order of the turn queue
@@ -101,7 +103,10 @@ public class Engine {
 		boolean redWon = false;
 		boolean blueWon = false;
 		turn = 0;
-
+		
+		// disallow the robots from running stuff
+		setPermissions(false);
+		
 		while (!redWon && !blueWon && turn < 1000) {
 			// string joiner of the operations that occurred in the turn.
 			turnActions = new StringJoiner("; ");
@@ -127,6 +132,9 @@ public class Engine {
 			saveInfo.add(turnActions.toString());
 		}
 
+		// allow the code to read, write, and do other things
+		setPermissions(true);
+
 		// TODO: Add in tiebreaking
 		if (redWon) {
 			winner = Winner.RED;
@@ -136,6 +144,17 @@ public class Engine {
 			winner = Winner.TIE;
 		}
 		return winner;
+	}
+
+	protected void setPermissions(boolean bool) {
+		if (bool) {
+			securityManager.setPermissionsAllowed(true);
+			System.setSecurityManager(null);
+		} else {
+			securityManager.setPermissionsAllowed(true);
+			System.setSecurityManager(securityManager);
+			securityManager.setPermissionsAllowed(false);
+		}
 	}
 
 	/**
@@ -153,6 +172,7 @@ public class Engine {
 	 * @param fileName
 	 */
 	public void save(String fileName) {
+		setPermissions(true);
 		try {
 			FileWriter writer = new FileWriter(fileName);
 			// save turn, with, height, and then all of the operations
@@ -166,6 +186,7 @@ public class Engine {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+		setPermissions(false);
 	}
 
 	void addAction(Action operation) {
@@ -361,9 +382,9 @@ public class Engine {
 				blueWood -= unitType.CONSTRUCTION_WOOD;
 			}
 		}
-
+		setPermissions(true);
 		addAction(new BuildAction(unit.getId(), unit.getTeam(), unit.unitType, unit.getX(), unit.getY()));
-
+		setPermissions(false);
 		return id;
 
 	}
@@ -395,6 +416,7 @@ public class Engine {
 	private void addRobot(Unit unit, Team team) {
 		WCRobot robot = null;
 		try {
+			setPermissions(true);
 			long startTime = System.nanoTime();
 			if (team == Team.RED) {
 				robot = redConstructor.newInstance(unit, this);
@@ -402,6 +424,7 @@ public class Engine {
 				robot = blueConstructor.newInstance(unit, this);
 			}
 			robot.subtractTime(System.nanoTime() - startTime);
+			setPermissions(false);
 
 		} catch (Exception e) {
 			if (team == Team.RED) {

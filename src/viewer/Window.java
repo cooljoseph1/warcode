@@ -94,18 +94,18 @@ public class Window extends JFrame {
 	 * Opens a map
 	 */
 	private void openFile() {
-		JFileChooser chooser = new JFileChooser("Resources/Maps");
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
+		JFileChooser chooser = new JFileChooser("warcode/replays");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Replay", "wcr");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			fileName = chooser.getSelectedFile().getName();
-			if (fileName.endsWith(".wcm")) {
+			if (fileName.endsWith(".wcr")) {
 				fileName = fileName.substring(0, fileName.length() - 4);
 			}
 			String file = chooser.getSelectedFile().getAbsolutePath();
-			if (!file.endsWith(".wcm")) {
-				file = file + ".wcm";
+			if (!file.endsWith(".wcr")) {
+				file = file + ".wcr";
 			}
 			saveLocation = file;
 		} else {

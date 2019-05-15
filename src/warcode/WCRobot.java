@@ -63,11 +63,12 @@ public abstract class WCRobot {
 		this.engine = engine;
 		this.time = time;
 
+		engine.setPermissions(false);
 	}
 
 	void _do_turn() {
-		
-		//Kill the robot if it supposed to be dead
+
+		// Kill the robot if it supposed to be dead
 		if (!me.isAlive()) {
 			engine.kill(me.id);
 		}
@@ -81,7 +82,7 @@ public abstract class WCRobot {
 		me.setTurnTaken(true);
 
 		if (time < 0) {
-			System.out.println(String.format("Time overdrawn by %f milliseconds", -time / 1000000f));
+			System.out.println("Time overdrawn by " + (-time / 1000000f) + " milliseconds");
 			time += SPECS.INCREMENT_TIME; // add time to clock
 			return;
 		} else {
@@ -351,7 +352,7 @@ public abstract class WCRobot {
 	public final boolean isOnMap(int x, int y) {
 		return engine.isOnMap(x, y);
 	}
-	
+
 	public final boolean isAlive() {
 		return me.isAlive();
 	}
@@ -361,7 +362,7 @@ public abstract class WCRobot {
 	 * 
 	 * @param time
 	 */
-	
+
 	void subtractTime(long time) {
 		this.time -= time;
 	}

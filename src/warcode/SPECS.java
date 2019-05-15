@@ -1,11 +1,5 @@
 package warcode;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
 public final class SPECS {
 	public static final UnitType Castle = UnitType.CASTLE;
 	public static final UnitType Peasant = UnitType.PEASANT;
@@ -28,20 +22,5 @@ public final class SPECS {
 
 	public static final int INITIAL_GOLD = 500;
 	public static final int INITIAL_WOOD = 0;
-
-	public static final Set<String> DISALLOWED_CLASSES = new HashSet<String>();
-
-	static {
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader("resources/DisallowedClasses.txt"));
-			String line = reader.readLine();
-			while (line != null) {
-				DISALLOWED_CLASSES.add(line);
-				line = reader.readLine();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 }
