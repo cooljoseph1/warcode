@@ -56,17 +56,17 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 	private ViewerEngine engine;
 
 	// robot images
-	private static final BufferedImage originalRedArcher = loadImage("warcode/resources/images/Red/RedArcher.png");
-	private static final BufferedImage originalRedCastle = loadImage("warcode/resources/images/Red/RedCastle.png");
-	private static final BufferedImage originalRedKnight = loadImage("warcode/resources/images/Red/RedKnight.png");
-	private static final BufferedImage originalRedMage = loadImage("warcode/resources/images/Red/RedMage.png");
-	private static final BufferedImage originalRedPeasant = loadImage("warcode/resources/images/Red/RedPeasant.png");
+	private static final BufferedImage originalRedArcher = loadImage("resources/images/Red/RedArcher.png");
+	private static final BufferedImage originalRedCastle = loadImage("resources/images/Red/RedCastle.png");
+	private static final BufferedImage originalRedKnight = loadImage("resources/images/Red/RedKnight.png");
+	private static final BufferedImage originalRedMage = loadImage("resources/images/Red/RedMage.png");
+	private static final BufferedImage originalRedPeasant = loadImage("resources/images/Red/RedPeasant.png");
 
-	private static final BufferedImage originalBlueArcher = loadImage("warcode/resources/images/Blue/BlueArcher.png");
-	private static final BufferedImage originalBlueCastle = loadImage("warcode/resources/images/Blue/BlueCastle.png");
-	private static final BufferedImage originalBlueKnight = loadImage("warcode/resources/images/Blue/BlueKnight.png");
-	private static final BufferedImage originalBlueMage = loadImage("warcode/resources/images/Blue/BlueMage.png");
-	private static final BufferedImage originalBluePeasant = loadImage("warcode/resources/images/Blue/BluePeasant.png");
+	private static final BufferedImage originalBlueArcher = loadImage("resources/images/Blue/BlueArcher.png");
+	private static final BufferedImage originalBlueCastle = loadImage("resources/images/Blue/BlueCastle.png");
+	private static final BufferedImage originalBlueKnight = loadImage("resources/images/Blue/BlueKnight.png");
+	private static final BufferedImage originalBlueMage = loadImage("resources/images/Blue/BlueMage.png");
+	private static final BufferedImage originalBluePeasant = loadImage("resources/images/Blue/BluePeasant.png");
 
 	private BufferedImage redArcher = originalRedArcher;
 	private BufferedImage redCastle = originalRedCastle;

@@ -219,6 +219,9 @@ public class Display extends JPanel implements MouseMotionListener, MouseListene
 				width = line.length();
 			}
 			reader.close();
+			
+			this.mapWidth = width;
+			this.mapHeight = height;
 
 			tileMap = new Tile[height][width];
 

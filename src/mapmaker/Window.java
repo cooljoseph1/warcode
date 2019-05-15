@@ -51,7 +51,7 @@ public class Window extends JFrame {
 
 		this.display = display;
 
-		ImageIcon img = new ImageIcon("Resources/WarcodeIcon.png");
+		ImageIcon img = new ImageIcon("resources/images/WarcodeIcon.png");
 		setIconImage(img.getImage());
 
 		makeMenuBar();
@@ -269,7 +269,7 @@ public class Window extends JFrame {
 	 *         cancelled.
 	 */
 	private boolean chooseSaveLocation() {
-		JFileChooser chooser = new JFileChooser("warcode/resources/maps");
+		JFileChooser chooser = new JFileChooser("resources/maps");
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showSaveDialog(this);
@@ -308,7 +308,7 @@ public class Window extends JFrame {
 	 * Opens a map
 	 */
 	private void openFile() {
-		JFileChooser chooser = new JFileChooser("warcode/resources/maps");
+		JFileChooser chooser = new JFileChooser("resources/maps");
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Map", "wcm");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);

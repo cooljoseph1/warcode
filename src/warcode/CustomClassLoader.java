@@ -19,11 +19,11 @@ public class CustomClassLoader extends ClassLoader {
 		Field[] variables = c.getDeclaredFields();
 		for (Field variable : variables) {
 			int modifiers = variable.getModifiers();
-			if (Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers) && !variable.isSynthetic()) {
+			if (Modifier.isStatic(modifiers) && !(Modifier.isFinal(modifiers) && variable.getType().isPrimitive()) && !variable.isSynthetic()) {
 				// All static variables must either be final or created by the compiler
 
 				throw new GameException(
-						"Static variables are not allowed unless they are final:  " + variable.getName());
+						"Static variables are not allowed unless they are primitive and final:  " + variable.getName());
 			}
 		}
 		

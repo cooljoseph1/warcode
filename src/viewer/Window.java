@@ -94,7 +94,7 @@ public class Window extends JFrame {
 	 * Opens a map
 	 */
 	private void openFile() {
-		JFileChooser chooser = new JFileChooser("warcode/replays");
+		JFileChooser chooser = new JFileChooser("replays");
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("Warcode 2019 Replay", "wcr");
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
