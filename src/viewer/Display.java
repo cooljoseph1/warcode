@@ -1,5 +1,6 @@
 package viewer;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -143,9 +144,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		}
 		drawLines(g2d);
 		if (engine != null) {
-			for (Attack attack : engine.getAttacks()) {
-				drawAttack(g2d, attack);
-			}
+			drawAttacks(g2d);
 		}
 		g2d.dispose();
 
@@ -187,6 +186,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	protected void drawLines(Graphics2D g2d) {
 		g2d.setColor(Color.BLACK);
+		g2d.setStroke(new BasicStroke());
 		for (int y = 0; y < mapHeight + 1; y++) {
 			drawLine(g2d, 0, y, mapWidth, y);
 		}
@@ -327,14 +327,19 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 
 	private void drawLine(Graphics2D g2d, double startX, double startY, double endX, double endY) {
 		// smart drawing -- it only draws it if it will show up on the screen
-		int left = (int) (startX * scaleSize + this.left);
-		int top = (int) (startY * scaleSize + this.top);
-		int right = (int) (endX * scaleSize + this.left);
-		int bottom = (int) (endY * scaleSize + this.top);
+		int x1 = (int) (startX * scaleSize + this.left);
+		int y1 = (int) (startY * scaleSize + this.top);
+		int x2 = (int) (endX * scaleSize + this.left);
+		int y2 = (int) (endY * scaleSize + this.top);
+
+		int left = Math.min(x1, x2);
+		int right = Math.max(x1, x2);
+		int top = Math.min(y1, y2);
+		int bottom = Math.max(y1, y2);
 
 		if (!(left > getWidth() || top > getHeight() || right < 0 || bottom < 0)) {
 
-			g2d.drawLine(left, top, right, bottom);
+			g2d.drawLine(x1, y1, x2, y2);
 		}
 	}
 
@@ -377,6 +382,13 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		}
 
 		repaint();
+	}
+
+	public void drawAttacks(Graphics2D g2d) {
+		g2d.setStroke(new BasicStroke((int) (scaleSize / 16), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		for (Attack attack : engine.getAttacks()) {
+			drawAttack(g2d, attack);
+		}
 	}
 
 	public void drawAttack(Graphics2D g2d, Attack attack) {

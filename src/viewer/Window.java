@@ -4,25 +4,18 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.FileWriter;
 
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import warcode.Tile;
 
 public class Window extends JFrame {
 
@@ -51,7 +44,7 @@ public class Window extends JFrame {
 
 		this.display = display;
 
-		ImageIcon img = new ImageIcon("Resources/WarcodeIcon.png");
+		ImageIcon img = new ImageIcon("resources/images/WarcodeIcon.png");
 		setIconImage(img.getImage());
 
 		makeMenuBar();
