@@ -81,7 +81,11 @@ public class ViewerEngine {
 			throw new RuntimeException(ex);
 		}
 
-		for (LinkedList<Action> actions : turnActions) {
+		attacks = new LinkedList[turns + 1];
+		for (int i = 0; i <= turns; i++) {
+			LinkedList<Action> actions = turnActions[i];
+			attacks[i] = new LinkedList<Attack>();
+
 			for (Action action : actions) {
 				if (action.actionType == ActionType.BUILD) {
 					BuildAction buildAction = (BuildAction) action;
@@ -89,17 +93,7 @@ public class ViewerEngine {
 					ViewerUnit unit = new ViewerUnit(buildAction.id, buildAction.unitType, buildAction.team,
 							buildAction.x, buildAction.y);
 					idUnitMap.put(unit.id, unit);
-				}
-			}
-		}
-
-		attacks = new LinkedList[turns + 1];
-		for (int i = 0; i <= turns; i++) {
-			LinkedList<Action> actions = turnActions[i];
-			attacks[i] = new LinkedList<Attack>();
-
-			for (Action action : actions) {
-				if (action.actionType == ActionType.ATTACK) {
+				} else if (action.actionType == ActionType.ATTACK) {
 					AttackAction attackAction = (AttackAction) action;
 					ViewerUnit unit = getUnit(attackAction.id);
 					attacks[i]
