@@ -3,12 +3,12 @@ package viewer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import actions.Action;
+import actions.ActionType;
 import actions.AttackAction;
 import actions.BuildAction;
 import actions.CollectAction;
@@ -27,6 +27,8 @@ public class ViewerEngine {
 	private String saveFile;
 	private LinkedList<Action>[] turnActions;
 	private int turns;
+
+	private LinkedList<Attack>[] attacks;
 
 	private ViewerMap map;
 
@@ -65,7 +67,7 @@ public class ViewerEngine {
 			map = new ViewerMap(mapRows, width, height);
 
 			int turn = 0;
-			turnActions = new LinkedList[turns+1];
+			turnActions = new LinkedList[turns + 1];
 			for (String line = reader.readLine(); line != null; line = reader.readLine(), turn++) {
 				turnActions[turn] = new LinkedList<Action>();
 				for (String action : line.split("; ")) {
@@ -78,6 +80,34 @@ public class ViewerEngine {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
+
+		for (LinkedList<Action> actions : turnActions) {
+			for (Action action : actions) {
+				if (action.actionType == ActionType.BUILD) {
+					BuildAction buildAction = (BuildAction) action;
+
+					ViewerUnit unit = new ViewerUnit(buildAction.id, buildAction.unitType, buildAction.team,
+							buildAction.x, buildAction.y);
+					idUnitMap.put(unit.id, unit);
+				}
+			}
+		}
+
+		attacks = new LinkedList[turns + 1];
+		for (int i = 0; i <= turns; i++) {
+			LinkedList<Action> actions = turnActions[i];
+			attacks[i] = new LinkedList<Attack>();
+
+			for (Action action : actions) {
+				if (action.actionType == ActionType.ATTACK) {
+					AttackAction attackAction = (AttackAction) action;
+					ViewerUnit unit = getUnit(attackAction.id);
+					attacks[i]
+							.add(new Attack(unit.getX(), unit.getY(), attackAction.x, attackAction.y, unit.getTeam()));
+				}
+			}
+
+		}
 	}
 
 	public Winner getWinner() {
@@ -89,7 +119,6 @@ public class ViewerEngine {
 	}
 
 	public void moveForwardTurn() {
-
 		for (Action action : turnActions[turn]) {
 			switch (action.actionType) {
 			case ATTACK:
@@ -168,7 +197,8 @@ public class ViewerEngine {
 	}
 
 	public void doBuildAction(BuildAction buildAction) {
-		makeUnit(buildAction.x, buildAction.y, buildAction.team, buildAction.unitType, buildAction.id);
+		spendMoney(buildAction.team, buildAction.unitType);
+		aliveIdQueue.add(buildAction.id);
 	}
 
 	public void doCollectAction(CollectAction collectAction) {
@@ -207,8 +237,8 @@ public class ViewerEngine {
 	}
 
 	public void undoBuildAction(BuildAction buildAction) {
+		unSpendMoney(buildAction.team, buildAction.unitType);
 		aliveIdQueue.remove(Integer.valueOf(buildAction.id));
-		idUnitMap.remove(buildAction.id);
 	}
 
 	public void undoCollectAction(CollectAction collectAction) {
@@ -240,6 +270,13 @@ public class ViewerEngine {
 
 	public void undoSignalAction(SignalAction signalAction) {
 		getUnit(signalAction.id).setSignal(signalAction.signal);
+	}
+
+	public LinkedList<Attack> getAttacks() {
+		if (turn >= 0 && turn < attacks.length) {
+			return attacks[turn];
+		}
+		return new LinkedList<Attack>();
 	}
 
 	public Winner playGame(String mapName) {
@@ -360,25 +397,29 @@ public class ViewerEngine {
 	 * @param unitType
 	 * @return id of new unit
 	 */
-	protected void makeUnit(int x, int y, Team team, UnitType unitType, int id) {
-		makeUnit(x, y, team, unitType, id, true);
+
+	protected void spendMoney(Team team, UnitType unitType) {
+
+		if (team == Team.RED) {
+			redGold -= unitType.CONSTRUCTION_GOLD;
+			redWood -= unitType.CONSTRUCTION_WOOD;
+		} else {
+			blueGold -= unitType.CONSTRUCTION_GOLD;
+			blueWood -= unitType.CONSTRUCTION_WOOD;
+		}
+
 	}
 
-	protected void makeUnit(int x, int y, Team team, UnitType unitType, int id, boolean subtractResources) {
+	protected void unSpendMoney(Team team, UnitType unitType) {
 
-		ViewerUnit viewerUnit = new ViewerUnit(id, unitType, team, x, y);
-
-		addUnit(viewerUnit, team);
-
-		if (subtractResources) {
-			if (team == Team.RED) {
-				redGold -= unitType.CONSTRUCTION_GOLD;
-				redWood -= unitType.CONSTRUCTION_WOOD;
-			} else {
-				blueGold -= unitType.CONSTRUCTION_GOLD;
-				blueWood -= unitType.CONSTRUCTION_WOOD;
-			}
+		if (team == Team.RED) {
+			redGold += unitType.CONSTRUCTION_GOLD;
+			redWood += unitType.CONSTRUCTION_WOOD;
+		} else {
+			blueGold += unitType.CONSTRUCTION_GOLD;
+			blueWood += unitType.CONSTRUCTION_WOOD;
 		}
+
 	}
 
 	protected ViewerUnit getUnit(int id) {
@@ -387,30 +428,6 @@ public class ViewerEngine {
 
 	protected LinkedList<Integer> getAliveUnitIds() { // Dangerous! Returns the actual Linked List!
 		return aliveIdQueue;
-	}
-
-	private void addUnit(ViewerUnit viewerUnit, Team team) {
-		// add robot to the id-robot hashmap
-		idUnitMap.put(viewerUnit.id, viewerUnit);
-
-		aliveIdQueue.addFirst(viewerUnit.id);
-	}
-
-	private void removeUnit(int id) {
-		// if it is a castle, remove it from castles
-		ViewerUnit viewerUnit = getUnit(id);
-		if (viewerUnit.unitType == SPECS.Castle) {
-			castles.remove(viewerUnit);
-		}
-
-		// remove from turn queue
-		aliveIdQueue.remove(Integer.valueOf(id));
-	}
-
-	private void removeAllUnits(Collection<Integer> ids) {
-		for (int id : ids) {
-			removeUnit(id);
-		}
 	}
 
 	public ViewerMap getMap() {
@@ -435,14 +452,5 @@ public class ViewerEngine {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return dx * dx + dy * dy;
-	}
-
-	public static void main(String[] args) {
-		ViewerEngine engine = new ViewerEngine(args[0]);
-		while (engine.hasNextTurn()) {
-			engine.moveForwardTurn();
-		}
-
-		System.out.println(engine.getWinner());
 	}
 }

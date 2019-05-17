@@ -142,7 +142,11 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 			drawUnits(g2d);
 		}
 		drawLines(g2d);
-
+		if (engine != null) {
+			for (Attack attack : engine.getAttacks()) {
+				drawAttack(g2d, attack);
+			}
+		}
 		g2d.dispose();
 
 	}
@@ -356,7 +360,7 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		zoomX = 0;
 		zoomY = 0;
 		scaleImages();
-		turnSlider.setMaximum(engine.getTurns()+1);
+		turnSlider.setMaximum(engine.getTurns() + 1);
 
 		repaint();
 	}
@@ -373,6 +377,15 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		}
 
 		repaint();
+	}
+
+	public void drawAttack(Graphics2D g2d, Attack attack) {
+		if (attack.team == Team.RED) {
+			g2d.setColor(Color.RED);
+		} else if (attack.team == Team.BLUE) {
+			g2d.setColor(Color.BLUE);
+		}
+		drawLine(g2d, attack.startX + 0.5, attack.startY + 0.5, attack.endX + 0.5, attack.endY + 0.5);
 	}
 
 	@Override
