@@ -85,7 +85,9 @@ public class ViewerEngine {
 		for (int i = 0; i <= turns; i++) {
 			LinkedList<Action> actions = turnActions[i];
 			attacks[i] = new LinkedList<Attack>();
-
+			if (actions == null) {
+				continue;
+			}
 			for (Action action : actions) {
 				if (action.actionType == ActionType.BUILD) {
 					BuildAction buildAction = (BuildAction) action;
@@ -113,6 +115,10 @@ public class ViewerEngine {
 	}
 
 	public void moveForwardTurn() {
+		if (turnActions[turn] == null) {
+			turn++;
+			return;
+		}
 		for (Action action : turnActions[turn]) {
 			switch (action.actionType) {
 			case ATTACK:
@@ -149,6 +155,10 @@ public class ViewerEngine {
 	}
 
 	public void moveBackwardTurn() {
+		if (turnActions[turn-1] == null) {
+			turn--;
+			return;
+		}
 		Iterator turnActionsIterator = turnActions[turn - 1].descendingIterator();
 		while (turnActionsIterator.hasNext()) {
 			Action action = (Action) turnActionsIterator.next();

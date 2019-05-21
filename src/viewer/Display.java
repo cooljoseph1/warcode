@@ -11,6 +11,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -304,10 +306,10 @@ public class Display extends JPanel implements ChangeListener, MouseWheelListene
 		BufferedImage after = new BufferedImage((int) scaleSize, (int) scaleSize, BufferedImage.TYPE_INT_ARGB);
 
 		Graphics2D g2d = (Graphics2D) after.getGraphics();
-
-		g2d.scale(scaleSize / w, scaleSize / h);
-		g2d.drawImage(before, 0, 0, null);
-		g2d.dispose();
+		AffineTransform at = new AffineTransform();
+		at.scale(scaleSize/w, scaleSize/h);
+		AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+		after = scaleOp.filter(before, after);
 
 		return after;
 
